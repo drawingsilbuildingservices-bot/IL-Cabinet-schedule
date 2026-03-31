@@ -74,6 +74,10 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
 .bar{position:absolute;height:18px;display:flex;align-items:center;overflow:hidden;font-size:11px;font-weight:500;cursor:grab}
 .bar:hover{filter:brightness(0.9);z-index:5}
 .bar.dragging{opacity:0.35;cursor:grabbing}
+.bar.resizing{opacity:0.7;cursor:ew-resize;z-index:20}
+.resize-handle{position:absolute;right:0;top:0;width:7px;height:100%;cursor:ew-resize;z-index:10;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.resize-handle::after{content:'';display:block;width:2px;height:10px;background:currentColor;opacity:0.35;border-radius:2px}
+.day-cell.resize-over{background:#e8ffe8 !important;outline:2px dashed #639922;outline-offset:-2px}
 .bar-inner{display:flex;align-items:center;padding:0 5px;gap:3px;overflow:hidden;white-space:nowrap;width:100%;height:100%;pointer-events:none}
 .badge{font-size:8px;font-weight:800;letter-spacing:0.04em;opacity:0.65;flex-shrink:0}
 .bar-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -85,6 +89,12 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
 .b-dropoff{background:#FAEEDA;color:#633806}
 .b-install{background:#FBEAF0;color:#72243E}
 .b-service{background:#F1EFE8;color:#444441}
+.resize-handle{position:absolute;right:0;top:0;width:8px;height:100%;cursor:ew-resize;z-index:10;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.15s}
+.resize-handle:after{content:'';width:2px;height:10px;background:currentColor;opacity:0.4;border-radius:2px}
+.bar:hover .resize-handle{opacity:1}
+.bar.resizing{opacity:0.6;cursor:ew-resize}
+.day-cell.resize-over{background:#e8f4ff !important;outline:2px dashed #639922;outline-offset:-2px}
+.resize-ghost{position:fixed;pointer-events:none;z-index:9999;font-size:11px;font-weight:500;padding:3px 10px;border-radius:5px;display:none;align-items:center;gap:4px;height:22px;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,0.18);background:#EAF3DE;color:#27500A}
 .drag-ghost{position:fixed;pointer-events:none;z-index:9999;opacity:0.9;border-radius:5px;padding:3px 10px;font-size:11px;font-weight:500;display:none;align-items:center;gap:4px;height:22px;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,0.18)}
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:300;align-items:center;justify-content:center}
 .overlay.open{display:flex}
@@ -166,6 +176,7 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
   <div class="cal-wrap"><div class="cal-outer" id="calOuter"></div></div>
 </div>
 <div id="dragGhost" class="drag-ghost"></div>
+<div id="resizeGhost" class="resize-ghost"></div>
 <div class="overlay" id="evtOverlay">
 <div class="modal">
   <h3 id="evtTitle">Add event</h3>
@@ -262,6 +273,7 @@ let activeFilters=new Set(['cut','build','dropoff','install','service']);
 let showSat=true,showSun=true;
 let userName='User';
 let dragId=null,dragOffsetDays=0,dragOverCell=null;
+let resizeId=null,resizeOverCell=null,resizeStartDate=null;
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function toDate(s){const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
@@ -388,9 +400,11 @@ function render(){
       cell.style.minHeight=cellH+'px';
       cell.dataset.date=ds;
 
-      // drop target
-      cell.addEventListener('dragover',e=>{e.preventDefault();if(dragOverCell!==ds){document.querySelectorAll('.drag-over').forEach(c=>c.classList.remove('drag-over'));cell.classList.add('drag-over');dragOverCell=ds;}});
+      // drop target (move)
+      cell.addEventListener('dragover',e=>{e.preventDefault();if(dragOverCell!==ds){document.querySelectorAll('.drag-over').forEach(x=>x.classList.remove('drag-over'));cell.classList.add('drag-over');dragOverCell=ds;}});
       cell.addEventListener('drop',e=>{e.preventDefault();cell.classList.remove('drag-over');if(dragId)commitDrag(dragId,ds,dragOffsetDays);dragId=null;dragOverCell=null;hideDragGhost();});
+      // resize hover target (single listener)
+      cell.addEventListener('mouseover',()=>{if(!resizeId)return;document.querySelectorAll('.resize-over').forEach(x=>x.classList.remove('resize-over'));cell.classList.add('resize-over');resizeOverCell=ds;updateResizeGhost();});
 
       const top=document.createElement('div');top.className='day-top';
       const dn=document.createElement('div');dn.className='day-num'+(!inMonth?'':ds===todayStr?' tod':' cur');dn.textContent=d.getDate();top.appendChild(dn);
@@ -417,8 +431,9 @@ function render(){
         bar.appendChild(inner);
         bar.title=seg.ev.job+' \u2014 '+PNAMES[seg.ev.phase]+(seg.ev.skipSat&&seg.ev.skipSun?' \u00B7 skips Sat+Sun':seg.ev.skipSat?' \u00B7 skips Sat':seg.ev.skipSun?' \u00B7 skips Sun':'')+(seg.ev.notes?'\n'+seg.ev.notes:'');
 
-        // drag
+        // drag \u2014 blocked if resize in progress
         bar.addEventListener('dragstart',e=>{
+          if(resizeId||e.target.closest('.resize-handle')){e.preventDefault();return;}
           dragId=seg.id;
           dragOffsetDays=daysBetween(seg.ev.start,ds);
           setTimeout(()=>bar.classList.add('dragging'),0);
@@ -432,9 +447,30 @@ function render(){
           hideDragGhost();dragId=null;dragOverCell=null;
         });
 
+        // resize handle \u2014 only on the absolute end cell
+        if(isR&&seg.isAbsEnd){
+          const handle=document.createElement('div');
+          handle.className='resize-handle';
+          handle.title='Drag to resize';
+          handle.addEventListener('mousedown',e=>{
+            e.stopPropagation();e.preventDefault();
+            resizeId=seg.id;
+            bar.classList.add('resizing');
+            document.body.style.cursor='ew-resize';
+            document.body.style.userSelect='none';
+          });
+          bar.appendChild(handle);
+        }
+
         let mdTime=0;
-        bar.addEventListener('mousedown',()=>mdTime=Date.now());
-        bar.addEventListener('click',()=>{if(Date.now()-mdTime<250)openEdit(seg.ev);});
+        bar.addEventListener('mousedown',e=>{
+          if(e.target.closest('.resize-handle'))return;
+          mdTime=Date.now();
+        });
+        bar.addEventListener('click',e=>{
+          if(e.target.closest('.resize-handle'))return;
+          if(Date.now()-mdTime<250)openEdit(seg.ev);
+        });
         ba.appendChild(bar);
       });
 
@@ -470,6 +506,38 @@ function commitDrag(id,dropDate,offsetDays){
   const newEnd=addWorkingDays(newStart,workDays,skipSat,skipSun);
   saveEvent(id,{...ev,start:newStart,end:newEnd});
 }
+
+// resize ghost
+function updateResizeGhost(){
+  const g=document.getElementById('resizeGhost');
+  if(!resizeId||!resizeOverCell){g.style.display='none';return;}
+  const ev=getAllEvents()[resizeId];if(!ev)return;
+  const skipSat=ev.skipSat!==undefined?!!ev.skipSat:!!ev.skipWknd;
+  const skipSun=ev.skipSun!==undefined?!!ev.skipSun:!!ev.skipWknd;
+  const wd=countWorkingDays(ev.start,resizeOverCell,skipSat,skipSun);
+  g.style.display='flex';
+  g.textContent=wd+' working day'+(wd===1?'':'s');
+}
+document.addEventListener('mousemove',e=>{
+  const g=document.getElementById('resizeGhost');
+  if(resizeId&&g.style.display!=='none'){g.style.left=(e.clientX+14)+'px';g.style.top=(e.clientY-14)+'px';}
+});
+document.addEventListener('mouseup',()=>{
+  if(!resizeId)return;
+  const ev=getAllEvents()[resizeId];
+  if(ev&&resizeOverCell&&resizeOverCell>=ev.start){
+    const skipSat=ev.skipSat!==undefined?!!ev.skipSat:!!ev.skipWknd;
+    const skipSun=ev.skipSun!==undefined?!!ev.skipSun:!!ev.skipWknd;
+    const wd=countWorkingDays(ev.start,resizeOverCell,skipSat,skipSun);
+    const newEnd=addWorkingDays(ev.start,wd,skipSat,skipSun);
+    saveEvent(resizeId,{...ev,end:newEnd});
+  }
+  document.querySelectorAll('.resizing').forEach(b=>{b.classList.remove('resizing');b.draggable=true;});
+  document.querySelectorAll('.resize-over').forEach(x=>x.classList.remove('resize-over'));
+  const g=document.getElementById('resizeGhost');if(g)g.style.display='none';
+  document.body.style.cursor='';document.body.style.userSelect='';
+  resizeId=null;resizeOverCell=null;resizeStartDate=null;
+});
 
 // weekend toggles
 function updateToggles(){
