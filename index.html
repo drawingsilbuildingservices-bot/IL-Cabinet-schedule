@@ -19,7 +19,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .step-body a{color:#378ADD}
 code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-family:monospace}
 .note-box{background:#f0f7ff;border:1px solid #B5D4F4;border-radius:8px;padding:10px 12px;font-size:12px;color:#185FA5;line-height:1.5;margin:20px 0}
-.err-box{background:#fff5f5;border:1px solid #F09595;border-radius:8px;padding:10px 12px;font-size:12px;color:#A32D2D;line-height:1.5;margin-bottom:14px;display:none}
+.err-box{background:#fff5f5;border:1px solid #F09595;border-radius:8px;padding:10px 12px;font-size:12px;color:#A32D2D;margin-bottom:14px;display:none}
 .finput{margin-bottom:11px}
 .finput label{font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500}
 .finput input{width:100%;padding:9px 12px;border:1px solid #d0cfc8;border-radius:8px;font-size:13px;color:#1a1a1a;background:#fff;font-family:inherit}
@@ -30,13 +30,13 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
 .header-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .logo{font-size:15px;font-weight:600}
 .logo span{color:#378ADD}
-.live-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 8px;border-radius:20px;border:1px solid #C0DD97;background:#EAF3DE;color:#3B6D11;margin-left:6px}
+.live-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 8px;border-radius:20px;border:1px solid #D3D1C7;background:#F1EFE8;color:#5F5E5A;margin-left:6px}
+.live-badge.on{border-color:#C0DD97;background:#EAF3DE;color:#3B6D11}
 .live-badge.off{border-color:#F09595;background:#fff5f5;color:#A32D2D}
-.live-badge.connecting{border-color:#D3D1C7;background:#F1EFE8;color:#5F5E5A}
 .live-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
 .nav-btns{display:flex;gap:5px;align-items:center}
 .month-label{font-size:14px;font-weight:500;min-width:148px;text-align:center}
-.btn{padding:5px 12px;border:1px solid #d0cfc8;border-radius:8px;background:#fff;color:#1a1a1a;cursor:pointer;font-size:13px;font-weight:500}
+.btn{padding:5px 12px;border:1px solid #d0cfc8;border-radius:8px;background:#fff;color:#1a1a1a;cursor:pointer;font-size:13px;font-weight:500;white-space:nowrap}
 .btn:hover{background:#f0efe8}
 .btn:active{transform:scale(0.97)}
 .btn-primary{background:#378ADD;color:#fff;border-color:#378ADD}
@@ -44,38 +44,53 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
 .btn-danger{color:#A32D2D;border-color:#F09595}
 .btn-danger:hover{background:#FCEBEB}
 .btn-sm{padding:4px 10px;font-size:12px}
+.toggle-btn{padding:4px 10px;font-size:12px;border:1px solid #d0cfc8;border-radius:8px;background:#fff;color:#888;cursor:pointer}
+.toggle-btn.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
 
-.legend{background:#fff;border-bottom:1px solid #e0dfd8;padding:6px 16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.toolbar{background:#fff;border-bottom:1px solid #e0dfd8;padding:6px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.legend-group{display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex:1}
 .leg{display:flex;align-items:center;gap:5px;font-size:12px;color:#555;cursor:pointer;padding:3px 7px;border-radius:6px;border:1px solid transparent;user-select:none}
 .leg:hover{background:#f5f4f0}
 .leg.active{border-color:#d0cfc8;background:#f5f4f0}
 .leg-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0}
-.leg-hint{font-size:11px;color:#bbb;margin-left:auto}
+.weekend-toggles{display:flex;gap:5px;align-items:center;border-left:1px solid #e0dfd8;padding-left:10px;margin-left:4px}
+.wknd-label{font-size:11px;color:#aaa}
 
-.cal-wrap{padding:12px 16px}
-.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border:1px solid #e0dfd8;border-radius:12px;overflow:hidden;background:#e0dfd8;gap:1px}
+.cal-wrap{padding:12px 16px;overflow-x:auto}
+.cal-grid{display:grid;border:1px solid #e0dfd8;border-radius:12px;overflow:hidden;background:#e0dfd8;gap:1px;min-width:500px}
 .day-header{background:#fff;padding:7px 5px;font-size:11px;font-weight:600;color:#999;text-align:center;text-transform:uppercase;letter-spacing:0.05em}
-.day-cell{background:#fff;min-height:110px;padding:5px;position:relative}
+.day-header.weekend-col{color:#c9b9a0}
+
+.week-row{display:contents}
+.day-cell{background:#fff;min-height:100px;padding:4px 3px 4px 3px;position:relative}
 .day-cell:hover{background:#fafaf8}
 .day-cell.other{background:#f8f7f3}
 .day-cell.today-cell{background:#fffbe6}
 .day-cell.hol-cell{background:#fff7f0}
-.day-num{font-size:11px;color:#bbb;margin-bottom:3px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:50%}
+.day-cell.weekend-cell{background:#fdfcfa}
+.day-num{font-size:11px;color:#bbb;margin-bottom:2px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:50%}
 .day-num.cur{color:#555;font-weight:500}
 .day-num.tod{background:#378ADD;color:#fff;font-weight:700}
-.hol-label{font-size:9px;color:#c0654a;font-weight:600;margin-bottom:2px;text-transform:uppercase;letter-spacing:0.03em}
-.chip{font-size:11px;padding:2px 5px;border-radius:5px;margin-bottom:2px;cursor:pointer;display:flex;align-items:center;gap:3px;line-height:1.35;border:1px solid transparent;user-select:none}
-.chip:hover{filter:brightness(0.91)}
-.chip-badge{font-size:8px;font-weight:800;letter-spacing:0.05em;flex-shrink:0;opacity:0.65}
-.chip-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.chip-cont{opacity:0.5}
+.hol-label{font-size:9px;color:#c0654a;font-weight:600;margin-bottom:2px;text-transform:uppercase;letter-spacing:0.03em;line-height:1.2}
 .add-hint{font-size:9px;color:#ddd;margin-top:2px;display:none}
 .day-cell:hover .add-hint{display:block}
-.p-cut{background:#E6F1FB;color:#0C447C;border-color:#B5D4F4}
-.p-build{background:#EAF3DE;color:#27500A;border-color:#C0DD97}
-.p-dropoff{background:#FAEEDA;color:#633806;border-color:#FAC775}
-.p-install{background:#FBEAF0;color:#72243E;border-color:#F4C0D1}
-.p-service{background:#F1EFE8;color:#444441;border-color:#D3D1C7}
+
+/* ── SPANNING EVENT BARS ── */
+.events-layer{position:relative;min-height:18px}
+.event-bar{position:absolute;height:18px;border-radius:0;display:flex;align-items:center;padding:0 5px;cursor:pointer;overflow:hidden;white-space:nowrap;font-size:11px;font-weight:500;z-index:2;border-top:1px solid transparent;border-bottom:1px solid transparent;top:0}
+.event-bar:hover{filter:brightness(0.9);z-index:10}
+.event-bar.bar-start{border-radius:5px 0 0 5px;border-left:1px solid transparent}
+.event-bar.bar-end{border-radius:0 5px 5px 0;border-right:1px solid transparent}
+.event-bar.bar-solo{border-radius:5px;border:1px solid transparent}
+.event-bar.bar-start.bar-end{border-radius:5px;border:1px solid transparent}
+.bar-badge{font-size:8px;font-weight:800;letter-spacing:0.04em;opacity:0.65;margin-right:3px;flex-shrink:0}
+.bar-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.b-cut{background:#E6F1FB;color:#0C447C;border-color:#B5D4F4!important}
+.b-build{background:#EAF3DE;color:#27500A;border-color:#C0DD97!important}
+.b-dropoff{background:#FAEEDA;color:#633806;border-color:#FAC775!important}
+.b-install{background:#FBEAF0;color:#72243E;border-color:#F4C0D1!important}
+.b-service{background:#F1EFE8;color:#444441;border-color:#D3D1C7!important}
 
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:300;align-items:center;justify-content:center}
 .overlay.open{display:flex}
@@ -84,7 +99,7 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
 .frow{margin-bottom:11px}
 .frow label{font-size:11px;color:#777;display:block;margin-bottom:3px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em}
 .frow input,.frow select,.frow textarea{width:100%;padding:7px 10px;border:1px solid #d0cfc8;border-radius:7px;font-size:13px;color:#1a1a1a;background:#fff;font-family:inherit}
-.frow input:focus,.frow select:focus,.frow textarea:focus{outline:none;border-color:#378ADD}
+.frow input:focus,.frow textarea:focus{outline:none;border-color:#378ADD}
 .frow textarea{resize:vertical;min-height:52px}
 .phase-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
 .po{padding:6px 8px;border-radius:6px;border:2px solid transparent;cursor:pointer;font-size:12px;font-weight:600;text-align:center}
@@ -98,10 +113,11 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
 .settings-val{background:#f5f4f0;border-radius:8px;padding:10px 12px;font-size:12px;color:#555;line-height:1.6;margin-bottom:10px;word-break:break-all}
 .settings-val strong{color:#888;font-size:10px;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:2px}
 
-@media(max-width:600px){
+@media(max-width:640px){
   .cal-wrap{padding:8px}
-  .day-cell{min-height:80px}
+  .day-cell{min-height:70px}
   .month-label{min-width:110px;font-size:13px}
+  .weekend-toggles{border-left:none;padding-left:0}
 }
 </style>
 </head>
@@ -111,56 +127,42 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
 <div id="setupScreen">
 <div class="setup-card">
   <h1>Cabinet Schedule</h1>
-  <p>Real-time sync across your whole team using Firebase (free). Set up takes about 5 minutes the first time — everyone on the team then just opens the same HTML file.</p>
-
+  <p>Real-time sync across your whole team using Firebase (free). Set up takes about 5 minutes the first time.</p>
   <div class="setup-step">
     <div class="step-num">1</div>
     <div class="step-body">
       <strong>Create a free Firebase project</strong>
-      <span>Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> &rarr; "Add project" &rarr; name it (e.g. <em>cabinet-schedule</em>) &rarr; click through &rarr; Create project.</span>
+      <span>Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> &rarr; Add project &rarr; name it &rarr; Create.</span>
     </div>
   </div>
   <div class="setup-step">
     <div class="step-num">2</div>
     <div class="step-body">
       <strong>Enable Realtime Database</strong>
-      <span>Left menu &rarr; Build &rarr; Realtime Database &rarr; Create Database &rarr; pick any region &rarr; start in <strong>test mode</strong> &rarr; Enable.</span>
+      <span>Build &rarr; Realtime Database &rarr; Create Database &rarr; pick region &rarr; <strong>test mode</strong> &rarr; Enable.</span>
     </div>
   </div>
   <div class="setup-step">
     <div class="step-num">3</div>
     <div class="step-body">
-      <strong>Copy your Database URL</strong>
-      <span>At the top of the Realtime Database page you'll see: <code>https://your-project-default-rtdb.firebaseio.com</code> &mdash; copy it below.</span>
+      <strong>Set rules to open</strong>
+      <span>Realtime Database &rarr; Rules tab &rarr; replace with <code>{"rules":{".read":true,".write":true}}</code> &rarr; Publish.</span>
     </div>
   </div>
   <div class="setup-step">
     <div class="step-num">4</div>
     <div class="step-body">
-      <strong>Copy your Web API Key</strong>
-      <span>Gear icon &rarr; Project settings &rarr; scroll to "Your apps" &rarr; click &lt;/&gt; (web) &rarr; Register app &rarr; copy the <code>apiKey</code> value.</span>
+      <strong>Get your Database URL &amp; API Key</strong>
+      <span>Database URL is on the Data tab (e.g. <code>https://project-rtdb.firebaseio.com</code>). API Key is in Project Settings &rarr; Your apps &rarr; &lt;/&gt; &rarr; Register.</span>
     </div>
   </div>
-
-  <div class="note-box">Free Firebase "Spark" plan: 1 GB storage, 10 GB/month transfer — more than enough for a cabinet shop. No credit card needed.</div>
-
-  <div class="finput">
-    <label>Database URL</label>
-    <input id="cfgUrl" placeholder="https://your-project-default-rtdb.firebaseio.com" spellcheck="false" autocomplete="off"/>
-  </div>
-  <div class="finput">
-    <label>Web API Key</label>
-    <input id="cfgKey" placeholder="AIzaSy..." spellcheck="false" autocomplete="off"/>
-  </div>
-  <div class="finput">
-    <label>Your name (shown on changes)</label>
-    <input id="cfgName" placeholder="e.g. Johnny"/>
-  </div>
-
+  <div class="note-box">Free Firebase Spark plan — 1 GB storage, 10 GB/month transfer. No credit card needed.</div>
+  <div class="finput"><label>Database URL</label><input id="cfgUrl" placeholder="https://your-project-default-rtdb.firebaseio.com" spellcheck="false" autocomplete="off"/></div>
+  <div class="finput"><label>Web API Key</label><input id="cfgKey" placeholder="AIzaSy..." spellcheck="false" autocomplete="off"/></div>
+  <div class="finput"><label>Your name (shown on changes)</label><input id="cfgName" placeholder="e.g. Johnny"/></div>
   <div class="err-box" id="setupErr"></div>
-
   <button class="btn btn-primary" style="width:100%;padding:10px;font-size:14px" id="connectBtn">Connect &amp; open schedule</button>
-  <p style="font-size:11px;color:#aaa;margin-top:12px;text-align:center">Save these credentials — share the same HTML file with your team. Each person enters the same URL and API key once.</p>
+  <p style="font-size:11px;color:#aaa;margin-top:12px;text-align:center">Each team member opens this page and enters the same URL and API key once.</p>
 </div>
 </div>
 
@@ -169,7 +171,7 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
   <div class="header">
     <div class="header-left">
       <div class="logo">Cabinet <span>Schedule</span>
-        <span class="live-badge connecting" id="liveBadge"><span class="live-dot"></span><span id="liveText">connecting</span></span>
+        <span class="live-badge" id="liveBadge"><span class="live-dot"></span><span id="liveText">connecting</span></span>
       </div>
       <div class="nav-btns">
         <button class="btn" id="prevBtn">&#8592;</button>
@@ -184,13 +186,19 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
     </div>
   </div>
 
-  <div class="legend">
-    <span class="leg active" data-phase="cut"><span class="leg-dot" style="background:#B5D4F4"></span>Cutting</span>
-    <span class="leg active" data-phase="build"><span class="leg-dot" style="background:#C0DD97"></span>Building</span>
-    <span class="leg active" data-phase="dropoff"><span class="leg-dot" style="background:#FAC775"></span>Drop off</span>
-    <span class="leg active" data-phase="install"><span class="leg-dot" style="background:#F4C0D1"></span>Install</span>
-    <span class="leg active" data-phase="service"><span class="leg-dot" style="background:#D3D1C7"></span>Service</span>
-    <span class="leg-hint">tap to filter</span>
+  <div class="toolbar">
+    <div class="legend-group">
+      <span class="leg active" data-phase="cut"><span class="leg-dot" style="background:#B5D4F4"></span>Cutting</span>
+      <span class="leg active" data-phase="build"><span class="leg-dot" style="background:#C0DD97"></span>Building</span>
+      <span class="leg active" data-phase="dropoff"><span class="leg-dot" style="background:#FAC775"></span>Drop off</span>
+      <span class="leg active" data-phase="install"><span class="leg-dot" style="background:#F4C0D1"></span>Install</span>
+      <span class="leg active" data-phase="service"><span class="leg-dot" style="background:#D3D1C7"></span>Service</span>
+    </div>
+    <div class="weekend-toggles">
+      <span class="wknd-label">Show:</span>
+      <button class="toggle-btn active" id="toggleSat">Sat</button>
+      <button class="toggle-btn active" id="toggleSun">Sun</button>
+    </div>
   </div>
 
   <div class="cal-wrap">
@@ -231,9 +239,9 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
 <div class="modal">
   <h3>Settings</h3>
   <div class="settings-val"><strong>Database URL</strong><span id="infoUrl"></span></div>
-  <div class="settings-val"><strong>Currently logged in as</strong><span id="infoName"></span></div>
+  <div class="settings-val"><strong>Logged in as</strong><span id="infoName"></span></div>
   <div class="frow"><label>Update your name</label><input id="sName"/></div>
-  <p style="font-size:11px;color:#aaa;margin-bottom:14px;line-height:1.5">To change the Firebase connection, use "Reset connection" below.</p>
+  <p style="font-size:11px;color:#aaa;margin-bottom:14px;line-height:1.5">To change Firebase connection, reset below.</p>
   <div style="display:flex;gap:7px;justify-content:space-between;align-items:center">
     <button class="btn btn-danger btn-sm" id="clearBtn">Reset connection</button>
     <div style="display:flex;gap:7px">
@@ -248,7 +256,7 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-database-compat.min.js"></script>
 <script>
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
-const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const ALL_DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const HOLIDAYS={
   '2026-01-01':'New Year\'s Day','2026-01-26':'Australia Day',
   '2026-04-03':'Good Friday','2026-04-04':'Easter Saturday',
@@ -262,6 +270,7 @@ const HOLIDAYS={
 };
 const BADGES={cut:'CUT',build:'BLD',dropoff:'DRP',install:'INS',service:'SVC'};
 const PNAMES={cut:'Cutting',build:'Building',dropoff:'Drop off',install:'Install',service:'Service'};
+const PORDER=['cut','build','dropoff','install','service'];
 const SAMPLE=[
   {job:'Matthew — 31 Glenburn',phase:'cut',start:'2026-03-30',end:'2026-03-31',notes:''},
   {job:'Co Mai — 16 Romanesque',phase:'cut',start:'2026-04-01',end:'2026-04-07',notes:''},
@@ -277,19 +286,25 @@ const SAMPLE=[
   {job:'Co Mai — 16 Romanesque',phase:'build',start:'2026-04-07',end:'2026-04-14',notes:''},
 ];
 
-let db, eventsRef, events={};
-let curYear=2026, curMonth=3;
-let editId=null, selPhase='cut';
+let db,eventsRef,events={};
+let curYear=2026,curMonth=3;
+let editId=null,selPhase='cut';
 let activeFilters=new Set(['cut','build','dropoff','install','service']);
+let showSat=true,showSun=true;
 let userName='User';
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function toDate(s){const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
 function toStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function addDays(s,n){const d=toDate(s);d.setDate(d.getDate()+n);return toStr(d);}
+function dayOfWeek(s){const d=toDate(s);return d.getDay()===0?6:d.getDay()-1;} // 0=Mon,6=Sun
 
 /* ── BOOT ── */
-(function boot(){
+(function(){
   const cfg=JSON.parse(localStorage.getItem('cab_cfg')||'null');
+  const ws=JSON.parse(localStorage.getItem('cab_ws')||'{"sat":true,"sun":true}');
+  showSat=ws.sat;showSun=ws.sun;
+  updateToggleBtns();
   if(cfg&&cfg.url&&cfg.key){
     userName=cfg.name||'User';
     document.getElementById('setupScreen').style.display='none';
@@ -320,79 +335,248 @@ function initFirebase(dbUrl,apiKey){
     eventsRef=db.ref('events');
     setBadge('connecting');
     db.ref('.info/connected').on('value',s=>setBadge(s.val()?'live':'offline'));
-    eventsRef.on('value',snap=>{
-      events=snap.val()||{};
-      render();
-    },()=>setBadge('offline'));
-    eventsRef.once('value',snap=>{if(!snap.val()){const b={};SAMPLE.forEach(e=>{b[eventsRef.push().key]={...e,createdBy:userName,createdAt:Date.now()};});eventsRef.update(b);}});
+    eventsRef.on('value',snap=>{events=snap.val()||{};render();},()=>setBadge('offline'));
+    eventsRef.once('value',snap=>{
+      if(!snap.val()){
+        const b={};
+        SAMPLE.forEach(e=>{b[eventsRef.push().key]={...e,createdBy:userName,createdAt:Date.now()};});
+        eventsRef.update(b);
+      }
+    });
   }catch(e){setBadge('offline');console.error(e);}
 }
 
 function setBadge(s){
   const b=document.getElementById('liveBadge'),t=document.getElementById('liveText');
   b.className='live-badge';
-  if(s==='live'){t.textContent='live';b.classList.add('');} 
+  if(s==='live'){t.textContent='live';b.classList.add('on');}
   else if(s==='offline'){t.textContent='offline';b.classList.add('off');}
-  else{t.textContent='connecting';b.classList.add('connecting');}
+  else{t.textContent='connecting';}
+}
+
+/* ── WEEKEND TOGGLES ── */
+function updateToggleBtns(){
+  document.getElementById('toggleSat').classList.toggle('active',showSat);
+  document.getElementById('toggleSun').classList.toggle('active',showSun);
+}
+document.getElementById('toggleSat').onclick=()=>{
+  showSat=!showSat;updateToggleBtns();
+  localStorage.setItem('cab_ws',JSON.stringify({sat:showSat,sun:showSun}));render();
+};
+document.getElementById('toggleSun').onclick=()=>{
+  showSun=!showSun;updateToggleBtns();
+  localStorage.setItem('cab_ws',JSON.stringify({sat:showSat,sun:showSun}));render();
+};
+
+/* ── CALENDAR COLUMNS ── */
+function getVisibleDays(){
+  const d=['Mon','Tue','Wed','Thu','Fri'];
+  if(showSat)d.push('Sat');
+  if(showSun)d.push('Sun');
+  return d;
+}
+function getVisibleDowIndices(){
+  // Returns array of JS getDay() equivalents (0=Sun,1=Mon...6=Sat) that are visible
+  const vis=[1,2,3,4,5]; // Mon-Fri always
+  if(showSat)vis.push(6);
+  if(showSun)vis.push(0);
+  return vis;
+}
+
+/* ── SPANNING BAR LAYOUT ── */
+function buildWeekRows(firstCellDate, numCols, cellDates){
+  // cellDates: array of date strings for this week row (length = numCols)
+  // Returns array of row assignments for each event segment visible in this week
+  const visibleEvents=[];
+  Object.entries(events).forEach(([id,e])=>{
+    if(!activeFilters.has(e.phase))return;
+    const es=toDate(e.start),ee=toDate(e.end||e.start);
+    // Find overlap with this week's visible cells
+    let startCol=-1,endCol=-1;
+    cellDates.forEach((ds,col)=>{
+      const d=toDate(ds);
+      if(d>=es&&d<=ee){
+        if(startCol===-1)startCol=col;
+        endCol=col;
+      }
+    });
+    if(startCol===-1)return;
+    const isBarStart=toStr(es)===cellDates[startCol]&&e.start===cellDates[startCol];
+    const isAbsStart=e.start<=cellDates[0]?false:e.start===cellDates[startCol];
+    visibleEvents.push({id,ev:{...e,id},startCol,endCol,
+      isStart:e.start>=cellDates[0]&&e.start<=cellDates[numCols-1],
+      isEnd:(e.end||e.start)>=cellDates[0]&&(e.end||e.start)<=cellDates[numCols-1]
+    });
+  });
+  // Sort by phase order then job name for stable layout
+  visibleEvents.sort((a,b)=>PORDER.indexOf(a.ev.phase)-PORDER.indexOf(b.ev.phase)||a.ev.job.localeCompare(b.ev.job));
+  // Assign rows (tracks) to avoid overlap
+  const tracks=[];
+  visibleEvents.forEach(seg=>{
+    let placed=false;
+    for(let t=0;t<tracks.length;t++){
+      if(tracks[t]<=seg.startCol){tracks[t]=seg.endCol+1;seg.track=t;placed=true;break;}
+    }
+    if(!placed){seg.track=tracks.length;tracks.push(seg.endCol+1);}
+  });
+  return visibleEvents;
 }
 
 /* ── RENDER ── */
-function eventsForDay(ds){
-  const ord=['cut','build','dropoff','install','service'];
-  return Object.entries(events)
-    .filter(([,e])=>{
-      if(!activeFilters.has(e.phase))return false;
-      const s=toDate(e.start),en=toDate(e.end||e.start),d=toDate(ds);
-      return d>=s&&d<=en;
-    })
-    .map(([id,e])=>({id,...e}))
-    .sort((a,b)=>ord.indexOf(a.phase)-ord.indexOf(b.phase));
-}
-
 function render(){
   document.getElementById('monthLabel').textContent=MONTHS[curMonth]+' '+curYear;
   const grid=document.getElementById('calGrid');
   grid.innerHTML='';
-  DAYS.forEach(d=>{const h=document.createElement('div');h.className='day-header';h.textContent=d;grid.appendChild(h);});
-  const first=new Date(curYear,curMonth,1);
-  let dow=first.getDay();dow=dow===0?6:dow-1;
-  const dim=new Date(curYear,curMonth+1,0).getDate();
-  const prevDim=new Date(curYear,curMonth,0).getDate();
-  const todayStr=toStr(new Date());
-  const cells=[];
-  for(let i=0;i<dow;i++){const d=prevDim-dow+1+i,m=curMonth===0?11:curMonth-1,y=curMonth===0?curYear-1:curYear;cells.push({d,m,y,other:true});}
-  for(let i=1;i<=dim;i++)cells.push({d:i,m:curMonth,y:curYear,other:false});
-  const rem=7-cells.length%7;if(rem<7)for(let i=1;i<=rem;i++){const m=curMonth===11?0:curMonth+1,y=curMonth===11?curYear+1:curYear;cells.push({d:i,m,y,other:true});}
 
-  cells.forEach(c=>{
-    const ds=c.y+'-'+String(c.m+1).padStart(2,'0')+'-'+String(c.d).padStart(2,'0');
-    const hol=HOLIDAYS[ds];
-    const cell=document.createElement('div');
-    cell.className='day-cell'+(c.other?' other':ds===todayStr?' today-cell':hol?' hol-cell':'');
-    const dn=document.createElement('div');
-    dn.className='day-num'+(c.other?'':ds===todayStr?' tod':' cur');
-    dn.textContent=c.d;cell.appendChild(dn);
-    if(hol&&!c.other){const h=document.createElement('div');h.className='hol-label';h.textContent=hol;cell.appendChild(h);}
-    if(!c.other){
-      eventsForDay(ds).forEach(ev=>{
-        const chip=document.createElement('div');
-        chip.className='chip p-'+ev.phase+(ev.start===ds?'':' chip-cont');
-        chip.innerHTML='<span class="chip-badge">'+BADGES[ev.phase]+'</span><span class="chip-name">'+esc(ev.job)+'</span>';
-        chip.title=ev.job+' — '+PNAMES[ev.phase]+(ev.notes?'\n'+ev.notes:'')+(ev.updatedBy?'\nUpdated by: '+ev.updatedBy:ev.createdBy?'\nAdded by: '+ev.createdBy:'');
-        chip.onclick=()=>openEdit(ev);cell.appendChild(chip);
-      });
-      const hint=document.createElement('div');hint.className='add-hint';hint.textContent='+ add';cell.appendChild(hint);
-      cell.ondblclick=e=>{if(!e.target.closest('.chip'))openAdd(ds);};
-    }
-    grid.appendChild(cell);
+  const visDays=getVisibleDays();
+  const numCols=visDays.length;
+  grid.style.gridTemplateColumns=`repeat(${numCols},minmax(0,1fr))`;
+
+  // Day headers
+  visDays.forEach(d=>{
+    const h=document.createElement('div');
+    h.className='day-header'+(d==='Sat'||d==='Sun'?' weekend-col':'');
+    h.textContent=d;grid.appendChild(h);
   });
+
+  // Build list of visible date strings for the month view
+  const first=new Date(curYear,curMonth,1);
+  let startDow=first.getDay()===0?6:first.getDay()-1; // 0=Mon
+  // Adjust startDow for hidden days
+  const visDowJS=getVisibleDowIndices(); // JS day numbers visible
+  // We iterate week by week
+  const todayStr=toStr(new Date());
+
+  // Build all cells (date + meta) for the grid
+  // We go week by week, building rows
+  const dim=new Date(curYear,curMonth+1,0).getDate();
+  // Find the Monday of the week containing the 1st
+  const firstMonday=new Date(curYear,curMonth,1);
+  const fd=firstMonday.getDay();
+  firstMonday.setDate(firstMonday.getDate()-(fd===0?6:fd-1));
+
+  // Find the Sunday/last-visible-day of the week containing the last day
+  const lastDay=new Date(curYear,curMonth,dim);
+  const ld=lastDay.getDay();
+  const lastSunday=new Date(lastDay);
+  lastSunday.setDate(lastDay.getDate()+(ld===0?0:7-ld));
+
+  // Iterate weeks
+  const weekStart=new Date(firstMonday);
+  while(weekStart<=lastSunday){
+    // Build this week's visible cell dates
+    const weekCellDates=[];
+    for(let di=0;di<7;di++){
+      const d=new Date(weekStart);d.setDate(d.getDate()+di);
+      const jsDay=d.getDay();
+      if(jsDay===6&&!showSat)continue;
+      if(jsDay===0&&!showSun)continue;
+      weekCellDates.push(toStr(d));
+    }
+
+    // Compute spanning bars for this week
+    const bars=buildWeekRows(weekStart,numCols,weekCellDates);
+    const numTracks=bars.length>0?Math.max(...bars.map(b=>b.track))+1:0;
+    const trackH=20; // px per track
+    const cellH=Math.max(70, 28+numTracks*trackH+4);
+
+    // Render cells for this week
+    weekCellDates.forEach((ds,col)=>{
+      const d=toDate(ds);
+      const inMonth=d.getMonth()===curMonth;
+      const hol=HOLIDAYS[ds];
+      const jsDay=d.getDay();
+      const isWeekend=jsDay===0||jsDay===6;
+      const cell=document.createElement('div');
+      let cls='day-cell';
+      if(!inMonth)cls+=' other';
+      else if(ds===todayStr)cls+=' today-cell';
+      else if(hol)cls+=' hol-cell';
+      else if(isWeekend)cls+=' weekend-cell';
+      cell.className=cls;
+      cell.style.minHeight=cellH+'px';
+
+      const dn=document.createElement('div');
+      dn.className='day-num'+(!inMonth?'':ds===todayStr?' tod':' cur');
+      dn.textContent=d.getDate();cell.appendChild(dn);
+
+      if(hol&&inMonth){const hl=document.createElement('div');hl.className='hol-label';hl.textContent=hol;cell.appendChild(hl);}
+
+      // Events layer — sized to hold all tracks
+      const layer=document.createElement('div');
+      layer.className='events-layer';
+      layer.style.height=(numTracks*trackH)+'px';
+      layer.style.position='relative';
+
+      // Place bars that start or pass through this col
+      bars.forEach(seg=>{
+        if(col<seg.startCol||col>seg.endCol)return;
+        if(col!==seg.startCol)return; // only render from start col, use width to span
+
+        const span=seg.endCol-seg.startCol+1;
+        const bar=document.createElement('div');
+        let cls='event-bar b-'+seg.ev.phase;
+        const atStart=seg.isStart;
+        const atEnd=seg.isEnd;
+        if(atStart&&atEnd)cls+=' bar-solo';
+        else if(atStart)cls+=' bar-start';
+        else if(atEnd)cls+=' bar-end';
+        bar.className=cls;
+
+        // Position: spans multiple cells using calc
+        // Each cell is 1fr, so we use absolute within the layer using percentage of parent row
+        // We'll use a different approach: render bar inside each cell that it touches
+        // but only once from startCol — use negative margin trick won't work cross-cell
+        // Instead we render in the layer of the START cell only, and set width to span cols
+        // This only works if we lay out the entire week row as a single element
+        // Since we can't easily do that with separate divs, we render per-cell bars
+
+        bar.style.top=(seg.track*trackH)+'px';
+        bar.style.left='1px';
+        bar.style.right=atEnd?'1px':'-1px';
+        bar.style.height=(trackH-2)+'px';
+        bar.innerHTML=(atStart?'<span class="bar-badge">'+BADGES[seg.ev.phase]+'</span><span class="bar-name">'+esc(seg.ev.job)+'</span>':'');
+        bar.title=seg.ev.job+' — '+PNAMES[seg.ev.phase]+(seg.ev.notes?'\n'+seg.ev.notes:'')+(seg.ev.updatedBy?'\nUpdated by: '+seg.ev.updatedBy:seg.ev.createdBy?'\nAdded by: '+seg.ev.createdBy:'');
+        bar.onclick=()=>openEdit(seg.ev);
+        layer.appendChild(bar);
+      });
+
+      // For continuation cells (not start), render a continuation bar
+      bars.forEach(seg=>{
+        if(col<=seg.startCol||col>seg.endCol)return;
+        const bar=document.createElement('div');
+        let cls='event-bar b-'+seg.ev.phase;
+        const atEnd=seg.isEnd&&col===seg.endCol;
+        if(atEnd)cls+=' bar-end';
+        bar.className=cls;
+        bar.style.top=(seg.track*trackH)+'px';
+        bar.style.left='-1px';
+        bar.style.right=atEnd?'1px':'-1px';
+        bar.style.height=(trackH-2)+'px';
+        bar.title=seg.ev.job+' — '+PNAMES[seg.ev.phase];
+        bar.onclick=()=>openEdit(seg.ev);
+        layer.appendChild(bar);
+      });
+
+      cell.appendChild(layer);
+
+      if(inMonth){
+        const hint=document.createElement('div');hint.className='add-hint';hint.textContent='+ add';cell.appendChild(hint);
+        cell.ondblclick=e=>{if(!e.target.closest('.event-bar'))openAdd(ds);};
+      }
+      grid.appendChild(cell);
+    });
+
+    weekStart.setDate(weekStart.getDate()+7);
+  }
 }
 
-/* ── NAV & FILTERS ── */
+/* ── NAV ── */
 document.getElementById('prevBtn').onclick=()=>{curMonth--;if(curMonth<0){curMonth=11;curYear--;}render();};
 document.getElementById('nextBtn').onclick=()=>{curMonth++;if(curMonth>11){curMonth=0;curYear++;}render();};
 document.getElementById('todayBtn').onclick=()=>{const n=new Date();curYear=n.getFullYear();curMonth=n.getMonth();render();};
 document.getElementById('addBtn').onclick=()=>openAdd(toStr(new Date()));
+
 document.querySelectorAll('.leg').forEach(el=>el.onclick=()=>{
   const p=el.dataset.phase;
   if(activeFilters.has(p)){if(activeFilters.size>1){activeFilters.delete(p);el.classList.remove('active');}}
@@ -446,7 +630,7 @@ document.getElementById('delBtn').onclick=()=>{
   if(editId&&confirm('Delete this event?')){eventsRef.child(editId).remove();closeEvt();}
 };
 
-/* ── SETTINGS MODAL ── */
+/* ── SETTINGS ── */
 document.getElementById('settingsBtn').onclick=()=>{
   const cfg=JSON.parse(localStorage.getItem('cab_cfg')||'{}');
   document.getElementById('infoUrl').textContent=cfg.url||'—';
@@ -462,7 +646,7 @@ document.getElementById('saveSettingsBtn').onclick=()=>{
   document.getElementById('settingsOverlay').classList.remove('open');
 };
 document.getElementById('clearBtn').onclick=()=>{
-  if(confirm('This will disconnect this browser. You\'ll need to re-enter your Firebase details. Continue?')){localStorage.removeItem('cab_cfg');location.reload();}
+  if(confirm('Disconnect this browser from Firebase? You\'ll need to re-enter your credentials.')){localStorage.removeItem('cab_cfg');location.reload();}
 };
 </script>
 </body>
