@@ -89,6 +89,7 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
 .b-dropoff{background:#FAEEDA;color:#633806}
 .b-install{background:#FBEAF0;color:#72243E}
 .b-service{background:#F1EFE8;color:#444441}
+.b-other{background:#EEEDFE;color:#3C3489}
 .resize-handle{position:absolute;right:0;top:0;width:8px;height:100%;cursor:ew-resize;z-index:10;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.15s}
 .resize-handle:after{content:'';width:2px;height:10px;background:currentColor;opacity:0.4;border-radius:2px}
 .bar:hover .resize-handle{opacity:1}
@@ -112,6 +113,7 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
 .po-dropoff{background:#FAEEDA;color:#633806}.po-dropoff.sel{border-color:#BA7517}
 .po-install{background:#FBEAF0;color:#72243E}.po-install.sel{border-color:#D4537E}
 .po-service{background:#F1EFE8;color:#444441}.po-service.sel{border-color:#888780}
+.po-other{background:#EEEDFE;color:#3C3489}.po-other.sel{border-color:#7F77DD}
 .date-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .skip-row{background:#f8f7f3;border-radius:7px;border:1px solid #e8e7e0;padding:7px 10px;margin-bottom:5px;cursor:pointer;display:table;width:100%;table-layout:fixed}
 .skip-row:hover{background:#f0efe8}
@@ -166,6 +168,7 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
       <span class="leg active" data-phase="dropoff"><span class="leg-dot" style="background:#FAC775"></span>Drop off</span>
       <span class="leg active" data-phase="install"><span class="leg-dot" style="background:#F4C0D1"></span>Install</span>
       <span class="leg active" data-phase="service"><span class="leg-dot" style="background:#D3D1C7"></span>Service</span>
+      <span class="leg active" data-phase="other"><span class="leg-dot" style="background:#CECBF6"></span>Other</span>
     </div>
     <div class="weekend-toggles">
       <span class="wknd-label">Show:</span>
@@ -189,6 +192,7 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
       <div class="po po-dropoff" data-p="dropoff">Drop off</div>
       <div class="po po-install" data-p="install">Install</div>
       <div class="po po-service" data-p="service">Service</div>
+      <div class="po po-other" data-p="other">Other</div>
     </div>
   </div>
   <div class="frow date-row">
@@ -249,9 +253,9 @@ const HOLIDAYS={
   '2027-04-25':'Anzac Day','2027-06-14':"King's Birthday (VIC)",
   '2027-12-25':'Christmas Day','2027-12-28':'Boxing Day (substitute)',
 };
-const BADGES={cut:'CUT',build:'BLD',dropoff:'DRP',install:'INS',service:'SVC'};
-const PNAMES={cut:'Cutting',build:'Building',dropoff:'Drop off',install:'Install',service:'Service'};
-const PORDER=['cut','build','dropoff','install','service'];
+const BADGES={cut:'CUT',build:'BLD',dropoff:'DRP',install:'INS',service:'SVC',other:'OTH'};
+const PNAMES={cut:'Cutting',build:'Building',dropoff:'Drop off',install:'Install',service:'Service',other:'Other'};
+const PORDER=['cut','build','dropoff','install','service','other'];
 const SAMPLE=[
   {job:'Matthew \u2014 31 Glenburn',phase:'cut',start:'2026-03-30',end:'2026-03-31',skipSat:true,skipSun:true},
   {job:'Co Mai \u2014 16 Romanesque',phase:'cut',start:'2026-04-01',end:'2026-04-07',skipSat:true,skipSun:true},
@@ -269,7 +273,7 @@ const SAMPLE=[
 
 let curYear=2026,curMonth=3;
 let editId=null,selPhase='cut';
-let activeFilters=new Set(['cut','build','dropoff','install','service']);
+let activeFilters=new Set(['cut','build','dropoff','install','service','other']);
 let showSat=true,showSun=true;
 let userName='User';
 let dragId=null,dragOffsetDays=0,dragOverCell=null;
@@ -352,7 +356,10 @@ function layoutWeek(weekDates,allEvts){
       isAbsStart:vd[0]===weekDates[sc],
       isAbsEnd:vd[vd.length-1]===weekDates[ec]});
   });
-  segs.sort((a,b)=>PORDER.indexOf(a.ev.phase)-PORDER.indexOf(b.ev.phase)||a.ev.job.localeCompare(b.ev.job));
+  // Sort by start column first so earlier bars always grab lowest track,
+  // then by phase, then by job name \u2014 this prevents gaps mid-week
+  segs.sort((a,b)=>a.startCol-b.startCol||PORDER.indexOf(a.ev.phase)-PORDER.indexOf(b.ev.phase)||a.ev.job.localeCompare(b.ev.job));
+  // Track array stores the next free column for each track
   const ends=[];
   segs.forEach(s=>{
     let t=ends.findIndex(e=>e<=s.startCol);
