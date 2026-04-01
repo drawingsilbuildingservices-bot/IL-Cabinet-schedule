@@ -125,6 +125,23 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
 .modal-footer{display:flex;gap:7px;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid #f0efe8}
 .settings-val{background:#f5f4f0;border-radius:8px;padding:10px 12px;font-size:12px;color:#555;line-height:1.6;margin-bottom:10px;word-break:break-all}
 .settings-val strong{color:#888;font-size:10px;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:2px}
+.hist-modal{background:#fff;border-radius:14px;padding:20px;width:500px;max-width:96vw;max-height:80vh;display:flex;flex-direction:column;border:1px solid #e0dfd8}
+.hist-modal h3{font-size:14px;font-weight:600;margin-bottom:4px}
+.hist-subtitle{font-size:12px;color:#aaa;margin-bottom:14px}
+.hist-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:4px}
+.hist-entry{border:1px solid #e8e7e0;border-radius:8px;padding:10px 12px;background:#fafaf8}
+.hist-entry:first-child{border-color:#B5D4F4;background:#f0f7ff}
+.hist-meta{font-size:11px;color:#aaa;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.hist-meta strong{color:#555;font-weight:600}
+.hist-who{font-size:11px;color:#888}
+.hist-detail{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.hist-phase{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:0.03em}
+.hist-dates{font-size:12px;color:#333;font-weight:500}
+.hist-notes{font-size:11px;color:#888;font-style:italic}
+.hist-restore{font-size:11px;padding:3px 10px;border:1px solid #d0cfc8;border-radius:6px;background:#fff;cursor:pointer;color:#555;white-space:nowrap}
+.hist-restore:hover{background:#f0efe8}
+.hist-current{font-size:11px;color:#aaa;padding:3px 10px}
+.hist-empty{font-size:13px;color:#aaa;text-align:center;padding:24px}
 </style>
 </head>
 <body>
@@ -179,6 +196,16 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
   <div class="cal-wrap"><div class="cal-outer" id="calOuter"></div></div>
 </div>
 <div id="dragGhost" class="drag-ghost"></div>
+<div class="overlay" id="histOverlay">
+<div class="hist-modal">
+  <h3 id="histTitle">Event history</h3>
+  <div class="hist-subtitle" id="histSubtitle"></div>
+  <div class="hist-list" id="histList"></div>
+  <div style="margin-top:14px;padding-top:12px;border-top:1px solid #f0efe8;display:flex;justify-content:flex-end">
+    <button class="btn btn-sm" id="closeHistBtn">Close</button>
+  </div>
+</div>
+</div>
 <div id="resizeGhost" class="resize-ghost"></div>
 <div class="overlay" id="evtOverlay">
 <div class="modal">
@@ -215,6 +242,7 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
   <div class="frow"><label>Notes</label><textarea id="fNotes" placeholder="Optional..."></textarea></div>
   <div class="modal-footer">
     <button class="btn btn-danger" id="delBtn" style="margin-right:auto;display:none">Delete</button>
+    <button class="btn btn-sm" id="histBtn" style="display:none;margin-right:auto;margin-left:8px">History</button>
     <button class="btn" id="cancelEvtBtn">Cancel</button>
     <button class="btn btn-primary" id="saveEvtBtn">Save</button>
   </div>
@@ -573,7 +601,7 @@ function openAdd(ds){
   document.getElementById('fJob').value='';document.getElementById('fNotes').value='';
   document.getElementById('fStart').value=ds;document.getElementById('fEnd').value=ds;
   document.getElementById('fSkipSat').checked=true;document.getElementById('fSkipSun').checked=true;
-  setPhase('cut');document.getElementById('delBtn').style.display='none';
+  setPhase('cut');document.getElementById('delBtn').style.display='none';document.getElementById('histBtn').style.display='none';
   document.getElementById('evtOverlay').classList.add('open');
   setTimeout(()=>document.getElementById('fJob').focus(),60);
 }
@@ -585,11 +613,99 @@ function openEdit(ev){
   const _skipSat=ev.skipSat!==undefined?!!ev.skipSat:!!ev.skipWknd;
   const _skipSun=ev.skipSun!==undefined?!!ev.skipSun:!!ev.skipWknd;
   document.getElementById('fSkipSat').checked=_skipSat;document.getElementById('fSkipSun').checked=_skipSun;
-  setPhase(ev.phase);document.getElementById('delBtn').style.display='inline-block';
+  setPhase(ev.phase);document.getElementById('delBtn').style.display='inline-block';document.getElementById('histBtn').style.display='inline-block';
   document.getElementById('evtOverlay').classList.add('open');
 }
 function closeEvt(){document.getElementById('evtOverlay').classList.remove('open');}
 document.getElementById('cancelEvtBtn').onclick=closeEvt;
+
+// History modal
+const PHASE_COLORS={cut:'#E6F1FB',build:'#EAF3DE',dropoff:'#FAEEDA',install:'#FBEAF0',service:'#F1EFE8',other:'#EEEDFE'};
+const PHASE_TEXT={cut:'#0C447C',build:'#27500A',dropoff:'#633806',install:'#72243E',service:'#444441',other:'#3C3489'};
+function formatHistDate(ts){
+  if(!ts)return '';
+  const d=new Date(ts);
+  return d.toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})+', '+d.toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'});
+}
+function fmtD(s){
+  if(!s)return '';
+  const[y,m,d]=s.split('-');return d+'/'+m+'/'+y;
+}
+function openHistory(ev){
+  document.getElementById('histTitle').textContent=ev.job;
+  document.getElementById('histSubtitle').textContent=PNAMES[ev.phase]||ev.phase;
+  const list=document.getElementById('histList');
+  list.innerHTML='';
+  const hist=ev.history?Object.values(ev.history).sort((a,b)=>b.ts-a.ts):[];
+  if(!hist.length){list.innerHTML='<div class="hist-empty">No history recorded yet.<br>Changes will appear here after the next edit.</div>';closeEvt();document.getElementById('histOverlay').classList.add('open');return;}
+  hist.forEach((h,i)=>{
+    const entry=document.createElement('div');entry.className='hist-entry';
+    const skipTxt=h.skipSat&&h.skipSun?' \u00B7 skips wknd':h.skipSat?' \u00B7 skips Sat':h.skipSun?' \u00B7 skips Sun':'';
+    entry.innerHTML=
+      '<div class="hist-meta"><span><strong>'+formatHistDate(h.ts)+'</strong></span><span class="hist-who">'+(h.by||'Unknown')+'</span></div>'+
+      '<div class="hist-detail">'+
+        '<span class="hist-phase" style="background:'+PHASE_COLORS[h.phase]+';color:'+PHASE_TEXT[h.phase]+'">'+BADGES[h.phase]+'</span>'+
+        '<span class="hist-dates">'+fmtD(h.start)+' \u2192 '+fmtD(h.end)+'</span>'+
+        (skipTxt?'<span class="hist-notes">'+skipTxt+'</span>':'')+
+        (h.notes?'<span class="hist-notes">'+esc(h.notes)+'</span>':'')+
+        (i===0?'<span class="hist-current">current</span>':'<button class="hist-restore" data-idx="'+i+'">Restore</button>')+
+      '</div>';
+    list.appendChild(entry);
+  });
+  list.querySelectorAll('.hist-restore').forEach(btn=>{
+    btn.onclick=()=>{
+      if(!confirm('Restore this version?'))return;
+      const h=hist[parseInt(btn.dataset.idx)];
+      const snapshot={job:h.job||ev.job,phase:h.phase,start:h.start,end:h.end,notes:h.notes||'',skipSat:!!h.skipSat,skipSun:!!h.skipSun,updatedBy:userName,updatedAt:Date.now()};
+      // keep existing history, add a restore entry
+      const newHist={...(ev.history||{})};
+      const rKey='h'+Date.now();
+      newHist[rKey]={...snapshot,by:userName+' (restored)',ts:Date.now()};
+      saveEvent(ev.id,{...ev,...snapshot,history:newHist});
+      document.getElementById('histOverlay').classList.remove('open');
+      closeEvt();
+    };
+  });
+  closeEvt();
+  document.getElementById('histOverlay').classList.add('open');
+}
+document.getElementById('histBtn').onclick=()=>{
+  const allEvts=getAllEvents();
+  if(editId&&allEvts[editId])openHistory({...allEvts[editId],id:editId});
+};
+document.getElementById('closeHistBtn').onclick=()=>document.getElementById('histOverlay').classList.remove('open');
+document.getElementById('histOverlay').onclick=e=>{if(e.target.id==='histOverlay')document.getElementById('histOverlay').classList.remove('open');};
+
+// Shared history snapshot builder \u2014 call before saving
+function buildHistorySnapshot(existingEv,newData,byName){
+  const prev=existingEv||{};
+  const hist={...(prev.history||{})};
+  // Check if anything meaningful actually changed
+  const changed=(newData.job||prev.job||'')!==(prev.job||'')||
+    (newData.phase||prev.phase||'cut')!==(prev.phase||'cut')||
+    (newData.start||prev.start||'')!==(prev.start||'')||
+    (newData.end||prev.end||'')!==(prev.end||'')||
+    (!!newData.skipSat)!==(!!prev.skipSat)||
+    (!!newData.skipSun)!==(!!prev.skipSun)||
+    (newData.notes||prev.notes||'')!==(prev.notes||'')||
+    !existingEv; // always record creation
+  if(!changed)return hist;
+  const key='h'+Date.now();
+  hist[key]={
+    ts:Date.now(),by:byName,
+    job:newData.job||prev.job||'',
+    phase:newData.phase||prev.phase||'cut',
+    start:newData.start||prev.start||'',
+    end:newData.end||prev.end||'',
+    notes:newData.notes||prev.notes||'',
+    skipSat:!!newData.skipSat,skipSun:!!newData.skipSun
+  };
+  // Keep only the 10 most recent entries
+  const entries=Object.entries(hist).sort((a,b)=>b[1].ts-a[1].ts);
+  const trimmed={};
+  entries.slice(0,10).forEach(([k,v])=>trimmed[k]=v);
+  return trimmed;
+}
 
 // When start date changes, auto-recalculate end date preserving working-day count
 function recalcEnd(){
@@ -626,7 +742,15 @@ showSat=_ws.sat;showSun=_ws.sun;updateToggles();
 
 let db,eventsRef,_liveEvts={};
 function getAllEvents(){return _liveEvts;}
-function saveEvent(id,data){if(eventsRef)eventsRef.child(id).update(data);}
+function saveEvent(id,data){
+  if(!eventsRef)return;
+  const existing=_liveEvts[id];
+  if(existing){
+    const {history:_,...dataWithoutHist}=data;
+    data.history=buildHistorySnapshot(existing,dataWithoutHist,userName);
+  }
+  eventsRef.child(id).update(data);
+}
 function setBadge(s){const b=document.getElementById('liveBadge'),t=document.getElementById('liveText');b.className='live-badge';if(s==='live'){t.textContent='live';b.classList.add('on');}else if(s==='offline'){t.textContent='offline';b.classList.add('off');}else t.textContent='connecting';}
 function initFirebase(u,k){
   try{
@@ -655,8 +779,16 @@ document.getElementById('saveEvtBtn').onclick=()=>{
   const wd=countWorkingDays(start,rawEnd,skipSat,skipSun);
   const end=addWorkingDays(start,wd,skipSat,skipSun);
   const p={job,phase:selPhase,start,end,notes,skipSat,skipSun,updatedBy:userName,updatedAt:Date.now()};
-  if(editId)eventsRef.child(editId).update(p);
-  else{p.createdBy=userName;p.createdAt=Date.now();eventsRef.push(p);}
+  if(editId){
+    const existing=_liveEvts[editId];
+    const hist=buildHistorySnapshot(existing,p,userName);
+    eventsRef.child(editId).update({...p,history:hist});
+  } else {
+    const newEv={...p,createdBy:userName,createdAt:Date.now()};
+    const hist=buildHistorySnapshot(null,newEv,userName);
+    newEv.history=hist;
+    eventsRef.push(newEv);
+  }
   closeEvt();
 };
 document.getElementById('delBtn').onclick=()=>{if(editId&&confirm('Delete this event?')){eventsRef.child(editId).remove();closeEvt();}};
