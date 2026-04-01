@@ -660,7 +660,23 @@ document.getElementById('saveEvtBtn').onclick=()=>{
   closeEvt();
 };
 document.getElementById('delBtn').onclick=()=>{if(editId&&confirm('Delete this event?')){eventsRef.child(editId).remove();closeEvt();}};
-(function(){const cfg=JSON.parse(localStorage.getItem('cab_cfg')||'null');if(cfg&&cfg.url&&cfg.key){userName=cfg.name||'User';document.getElementById('setupScreen').style.display='none';document.getElementById('app').style.display='block';initFirebase(cfg.url,cfg.key);}})();
+(function(){
+  // Check URL params first \u2014 allows pre-configured shareable links
+  const params=new URLSearchParams(window.location.search);
+  const urlParam=params.get('url'),keyParam=params.get('key'),nameParam=params.get('name');
+  if(urlParam&&keyParam){
+    const cfg={url:urlParam,key:keyParam,name:nameParam||'User'};
+    localStorage.setItem('cab_cfg',JSON.stringify(cfg));
+    userName=cfg.name;
+    document.getElementById('setupScreen').style.display='none';
+    document.getElementById('app').style.display='block';
+    initFirebase(cfg.url,cfg.key);
+    return;
+  }
+  // Fall back to stored config
+  const cfg=JSON.parse(localStorage.getItem('cab_cfg')||'null');
+  if(cfg&&cfg.url&&cfg.key){userName=cfg.name||'User';document.getElementById('setupScreen').style.display='none';document.getElementById('app').style.display='block';initFirebase(cfg.url,cfg.key);}
+})();
 
 </script>
 </body>
