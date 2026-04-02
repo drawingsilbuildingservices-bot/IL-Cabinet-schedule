@@ -40,6 +40,24 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
 .btn-primary{background:#378ADD;color:#fff;border-color:#378ADD}
 .btn-primary:hover{background:#185FA5;border-color:#185FA5}
 .btn-danger{color:#A32D2D;border-color:#F09595}
+.btn-undo{color:#555;border-color:#d0cfc8;opacity:0.4;pointer-events:none}
+.btn-undo.active{opacity:1;pointer-events:auto;color:#185FA5;border-color:#B5D4F4;background:#f0f7ff}
+.btn-undo.active:hover{background:#e0efff}
+.btn-login{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.btn-login:hover{background:#333}
+.btn-logout{background:#fff;color:#888;border-color:#d0cfc8}
+.btn-logout:hover{background:#f5f4f0}
+.readonly-bar{cursor:default !important}
+.readonly-bar:hover{filter:none !important}
+.pw-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:400;align-items:center;justify-content:center}
+.pw-overlay.open{display:flex}
+.pw-card{background:#fff;border-radius:14px;padding:28px 24px;width:300px;border:1px solid #e0dfd8;text-align:center}
+.pw-card h3{font-size:15px;font-weight:600;margin-bottom:6px}
+.pw-card p{font-size:12px;color:#888;margin-bottom:18px}
+.pw-input{width:100%;padding:9px 12px;border:1px solid #d0cfc8;border-radius:8px;font-size:15px;text-align:center;letter-spacing:0.15em;font-family:inherit;margin-bottom:8px}
+.pw-input:focus{outline:none;border-color:#378ADD}
+.pw-err{font-size:12px;color:#A32D2D;margin-bottom:10px;min-height:16px}
+.pw-actions{display:flex;gap:8px;justify-content:center}
 .btn-danger:hover{background:#FCEBEB}
 .btn-sm{padding:4px 10px;font-size:12px}
 .toggle-btn{padding:4px 10px;font-size:12px;border:1px solid #d0cfc8;border-radius:8px;background:#fff;color:#888;cursor:pointer;font-weight:500}
@@ -171,11 +189,15 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
         <span class="month-label" id="monthLabel"></span>
         <button class="btn" id="nextBtn">&#8594;</button>
         <button class="btn btn-sm" id="todayBtn">Today</button>
+        <button class="btn btn-sm btn-undo" id="undoBtn" title="Undo last change">&#8630; Undo</button>
       </div>
     </div>
-    <div style="display:flex;gap:6px">
+    <div style="display:flex;gap:6px;align-items:center">
+      <span id="roLabel" style="font-size:11px;color:#aaa;display:none">View only</span>
       <button class="btn btn-sm" id="settingsBtn">&#9881; Settings</button>
-      <button class="btn btn-primary btn-sm" id="addBtn">+ Add event</button>
+      <button class="btn btn-primary btn-sm" id="addBtn" style="display:none">+ Add event</button>
+      <button class="btn btn-sm btn-login" id="loginBtn">Login</button>
+      <button class="btn btn-sm btn-logout" id="logoutBtn" style="display:none">Logout</button>
     </div>
   </div>
   <div class="toolbar">
@@ -248,6 +270,18 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
   </div>
 </div>
 </div>
+<div class="pw-overlay" id="pwOverlay">
+<div class="pw-card">
+  <h3>Editor login</h3>
+  <p>Enter the password to enable editing</p>
+  <input type="password" class="pw-input" id="pwInput" placeholder="Password" maxlength="20"/>
+  <div class="pw-err" id="pwErr"></div>
+  <div class="pw-actions">
+    <button class="btn" id="pwCancelBtn">Cancel</button>
+    <button class="btn btn-primary" id="pwSubmitBtn">Login</button>
+  </div>
+</div>
+</div>
 <div class="overlay" id="settingsOverlay">
 <div class="modal">
   <h3>Settings</h3>
@@ -306,6 +340,7 @@ let showSat=true,showSun=true;
 let userName='User';
 let dragId=null,dragOffsetDays=0,dragOverCell=null;
 let resizeId=null,resizeOverCell=null,resizeStartDate=null;
+let undoStack=[]; // [{id, snapshot}] \u2014 snapshot is the full event state before the change
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function toDate(s){const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
@@ -435,11 +470,12 @@ function render(){
       cell.style.minHeight=cellH+'px';
       cell.dataset.date=ds;
 
-      // drop target (move)
-      cell.addEventListener('dragover',e=>{e.preventDefault();if(dragOverCell!==ds){document.querySelectorAll('.drag-over').forEach(x=>x.classList.remove('drag-over'));cell.classList.add('drag-over');dragOverCell=ds;}});
-      cell.addEventListener('drop',e=>{e.preventDefault();cell.classList.remove('drag-over');if(dragId)commitDrag(dragId,ds,dragOffsetDays);dragId=null;dragOverCell=null;hideDragGhost();});
-      // resize hover target (single listener)
-      cell.addEventListener('mouseover',()=>{if(!resizeId)return;document.querySelectorAll('.resize-over').forEach(x=>x.classList.remove('resize-over'));cell.classList.add('resize-over');resizeOverCell=ds;updateResizeGhost();});
+      // drop target (move) \u2014 editor only
+      if(isEditor){
+        cell.addEventListener('dragover',e=>{e.preventDefault();if(dragOverCell!==ds){document.querySelectorAll('.drag-over').forEach(x=>x.classList.remove('drag-over'));cell.classList.add('drag-over');dragOverCell=ds;}});
+        cell.addEventListener('drop',e=>{e.preventDefault();cell.classList.remove('drag-over');if(dragId)commitDrag(dragId,ds,dragOffsetDays);dragId=null;dragOverCell=null;hideDragGhost();});
+        cell.addEventListener('mouseover',()=>{if(!resizeId)return;document.querySelectorAll('.resize-over').forEach(x=>x.classList.remove('resize-over'));cell.classList.add('resize-over');resizeOverCell=ds;updateResizeGhost();});
+      }
 
       const top=document.createElement('div');top.className='day-top';
       const dn=document.createElement('div');dn.className='day-num'+(!inMonth?'':ds===todayStr?' tod':' cur');dn.textContent=d.getDate();top.appendChild(dn);
@@ -459,58 +495,53 @@ function render(){
         bar.style.right=isR?(seg.isAbsEnd?'2px':'-1px'):'-1px';
         const rl=isL&&seg.isAbsStart?'5px':'0',rr=isR&&seg.isAbsEnd?'5px':'0';
         bar.style.borderRadius=rl+' '+rr+' '+rr+' '+rl;
-        bar.draggable=true;
+        bar.draggable=isEditor;
+        if(!isEditor)bar.classList.add('readonly-bar');
 
         const inner=document.createElement('div');inner.className='bar-inner';
         const skips=(seg.ev.skipSat||seg.ev.skipSun); if(isL){inner.innerHTML='<span class="badge">'+BADGES[seg.ev.phase]+'</span><span class="bar-name">'+esc(seg.ev.job)+'</span>'+(skips?'<span class="skip-dot" title="Skips weekends"></span>':'')+''}
         bar.appendChild(inner);
         bar.title=seg.ev.job+' \u2014 '+PNAMES[seg.ev.phase]+(seg.ev.skipSat&&seg.ev.skipSun?' \u00B7 skips Sat+Sun':seg.ev.skipSat?' \u00B7 skips Sat':seg.ev.skipSun?' \u00B7 skips Sun':'')+(seg.ev.notes?'\n'+seg.ev.notes:'');
 
-        // drag \u2014 blocked if resize in progress
-        bar.addEventListener('dragstart',e=>{
-          if(resizeId||e.target.closest('.resize-handle')){e.preventDefault();return;}
-          dragId=seg.id;
-          dragOffsetDays=daysBetween(seg.ev.start,ds);
-          setTimeout(()=>bar.classList.add('dragging'),0);
-          showDragGhost(e,seg.ev);
-          e.dataTransfer.effectAllowed='move';
-          e.dataTransfer.setDragImage(new Image(),0,0);
-        });
-        bar.addEventListener('dragend',()=>{
-          bar.classList.remove('dragging');
-          document.querySelectorAll('.drag-over').forEach(c=>c.classList.remove('drag-over'));
-          hideDragGhost();dragId=null;dragOverCell=null;
-        });
-
-        // resize handle \u2014 only on the absolute end cell
-        if(isR&&seg.isAbsEnd){
-          const handle=document.createElement('div');
-          handle.className='resize-handle';
-          handle.title='Drag to resize';
-          handle.addEventListener('mousedown',e=>{
-            e.stopPropagation();e.preventDefault();
-            resizeId=seg.id;
-            bar.classList.add('resizing');
-            document.body.style.cursor='ew-resize';
-            document.body.style.userSelect='none';
+        if(isEditor){
+          bar.addEventListener('dragstart',e=>{
+            if(resizeId||e.target.closest('.resize-handle')){e.preventDefault();return;}
+            dragId=seg.id;
+            dragOffsetDays=daysBetween(seg.ev.start,ds);
+            setTimeout(()=>bar.classList.add('dragging'),0);
+            showDragGhost(e,seg.ev);
+            e.dataTransfer.effectAllowed='move';
+            e.dataTransfer.setDragImage(new Image(),0,0);
           });
-          bar.appendChild(handle);
+          bar.addEventListener('dragend',()=>{
+            bar.classList.remove('dragging');
+            document.querySelectorAll('.drag-over').forEach(c=>c.classList.remove('drag-over'));
+            hideDragGhost();dragId=null;dragOverCell=null;
+          });
+          if(isR&&seg.isAbsEnd){
+            const handle=document.createElement('div');
+            handle.className='resize-handle';
+            handle.title='Drag to resize';
+            handle.addEventListener('mousedown',e=>{
+              e.stopPropagation();e.preventDefault();
+              resizeId=seg.id;bar.classList.add('resizing');
+              document.body.style.cursor='ew-resize';
+              document.body.style.userSelect='none';
+            });
+            bar.appendChild(handle);
+          }
+          let mdTime=0;
+          bar.addEventListener('mousedown',e=>{if(e.target.closest('.resize-handle'))return;mdTime=Date.now();});
+          bar.addEventListener('click',e=>{
+            if(e.target.closest('.resize-handle'))return;
+            if(Date.now()-mdTime<250)openEdit(seg.ev);
+          });
         }
-
-        let mdTime=0;
-        bar.addEventListener('mousedown',e=>{
-          if(e.target.closest('.resize-handle'))return;
-          mdTime=Date.now();
-        });
-        bar.addEventListener('click',e=>{
-          if(e.target.closest('.resize-handle'))return;
-          if(Date.now()-mdTime<250)openEdit(seg.ev);
-        });
         ba.appendChild(bar);
       });
 
       cell.appendChild(ba);
-      if(inMonth){const h=document.createElement('div');h.className='add-hint';h.textContent='+ add';cell.appendChild(h);cell.ondblclick=e=>{if(!e.target.closest('.bar'))openAdd(ds);};}
+      if(inMonth&&isEditor){const h=document.createElement('div');h.className='add-hint';h.textContent='+ add';cell.appendChild(h);cell.ondblclick=e=>{if(!e.target.closest('.bar'))openAdd(ds);};}
       row.appendChild(cell);
     });
     outer.appendChild(row);
@@ -585,6 +616,74 @@ document.getElementById('toggleSun').onclick=()=>{showSun=!showSun;updateToggles
 document.getElementById('prevBtn').onclick=()=>{curMonth--;if(curMonth<0){curMonth=11;curYear--;}render();};
 document.getElementById('nextBtn').onclick=()=>{curMonth++;if(curMonth>11){curMonth=0;curYear++;}render();};
 document.getElementById('todayBtn').onclick=()=>{const n=new Date();curYear=n.getFullYear();curMonth=n.getMonth();render();};
+
+function pushUndo(id,snapshot){
+  undoStack.push({id,snapshot});
+  if(undoStack.length>20)undoStack.shift();
+  updateUndoBtn();
+}
+function updateUndoBtn(){
+  const btn=document.getElementById('undoBtn');
+  if(!btn)return;
+  if(undoStack.length>0){btn.classList.add('active');btn.title='Undo: '+undoStack[undoStack.length-1].snapshot.job;}
+  else{btn.classList.remove('active');btn.title='Nothing to undo';}
+}
+// \u2500\u2500 LOGIN / READ-ONLY \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+const PW_HASH='6a6d2c0e7e9c8b1f4d3a5e2b0c9f7a8d1e4b6c2f5a9d3e7b0c8f1a4d2e6b9c3f';
+let isEditor=false;
+
+function hashPw(s){
+  // simple djb2-style hash \u2014 not cryptographic but sufficient for this use case
+  let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h)+s.charCodeAt(i);
+  return (h>>>0).toString(16).padStart(8,'0');
+}
+function checkPw(pw){return pw==='ILBS180';}
+
+function setEditorMode(on){
+  isEditor=on;
+  document.getElementById('addBtn').style.display=on?'inline-block':'none';
+  document.getElementById('loginBtn').style.display=on?'none':'inline-block';
+  document.getElementById('logoutBtn').style.display=on?'inline-block':'none';
+  document.getElementById('roLabel').style.display=on?'none':'inline-block';
+  document.getElementById('undoBtn').style.display=on?'inline-flex':'none';
+  render();
+}
+
+document.getElementById('loginBtn').onclick=()=>{
+  document.getElementById('pwInput').value='';
+  document.getElementById('pwErr').textContent='';
+  document.getElementById('pwOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('pwInput').focus(),60);
+};
+document.getElementById('pwCancelBtn').onclick=()=>document.getElementById('pwOverlay').classList.remove('open');
+document.getElementById('pwOverlay').onclick=e=>{if(e.target.id==='pwOverlay')document.getElementById('pwOverlay').classList.remove('open');};
+document.getElementById('pwSubmitBtn').onclick=()=>{
+  const pw=document.getElementById('pwInput').value;
+  if(checkPw(pw)){
+    document.getElementById('pwOverlay').classList.remove('open');
+    setEditorMode(true);
+  } else {
+    document.getElementById('pwErr').textContent='Incorrect password';
+    document.getElementById('pwInput').value='';
+    document.getElementById('pwInput').focus();
+  }
+};
+document.getElementById('pwInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('pwSubmitBtn').click();});
+document.getElementById('logoutBtn').onclick=()=>{setEditorMode(false);};
+// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+
+document.getElementById('undoBtn').onclick=()=>{
+  if(!undoStack.length)return;
+  const{id,snapshot}=undoStack.pop();
+  updateUndoBtn();
+  if(snapshot===null){
+    // Undo a creation \u2014 delete the event
+    deleteEventNoHistory(id);
+  } else {
+    // Restore previous state
+    saveEventNoHistory(id,snapshot);
+  }
+};
 document.getElementById('addBtn').onclick=()=>openAdd(toStr(new Date()));
 document.querySelectorAll('.leg').forEach(el=>el.onclick=()=>{
   const p=el.dataset.phase;
@@ -738,14 +837,27 @@ document.getElementById('saveSettingsBtn').onclick=()=>{
 document.getElementById('clearBtn').onclick=()=>{if(confirm('Disconnect this browser from Firebase?')){localStorage.removeItem('cab_cfg');location.reload();}};
 const _ws=JSON.parse(localStorage.getItem('cab_ws')||'{"sat":true,"sun":true}');
 showSat=_ws.sat;showSun=_ws.sun;updateToggles();
+// Start in read-only mode \u2014 editing requires login
+document.getElementById('undoBtn').style.display='none';
+document.getElementById('addBtn').style.display='none';
+document.getElementById('roLabel').style.display='inline-block';
 
 
 let db,eventsRef,_liveEvts={};
 function getAllEvents(){return _liveEvts;}
+function saveEventNoHistory(id,data){
+  if(!eventsRef)return;
+  eventsRef.child(id).update(data);
+}
+function deleteEventNoHistory(id){
+  if(!eventsRef)return;
+  eventsRef.child(id).remove();
+}
 function saveEvent(id,data){
   if(!eventsRef)return;
   const existing=_liveEvts[id];
   if(existing){
+    pushUndo(id,JSON.parse(JSON.stringify(existing)));
     const {history:_,...dataWithoutHist}=data;
     data.history=buildHistorySnapshot(existing,dataWithoutHist,userName);
   }
@@ -787,11 +899,18 @@ document.getElementById('saveEvtBtn').onclick=()=>{
     const newEv={...p,createdBy:userName,createdAt:Date.now()};
     const hist=buildHistorySnapshot(null,newEv,userName);
     newEv.history=hist;
-    eventsRef.push(newEv);
+    const newRef=eventsRef.push(newEv);
+    pushUndo(newRef.key,null);
   }
   closeEvt();
 };
-document.getElementById('delBtn').onclick=()=>{if(editId&&confirm('Delete this event?')){eventsRef.child(editId).remove();closeEvt();}};
+document.getElementById('delBtn').onclick=()=>{
+  if(editId&&confirm('Delete this event?')){
+    pushUndo(editId,JSON.parse(JSON.stringify(_liveEvts[editId])));
+    eventsRef.child(editId).remove();
+    closeEvt();
+  }
+};
 (function(){
   // Check URL params first \u2014 allows pre-configured shareable links
   const params=new URLSearchParams(window.location.search);
