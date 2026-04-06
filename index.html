@@ -7,6 +7,33 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f0;color:#1a1a1a;font-size:14px;user-select:none}
+@media print{
+  @page{size:A3 landscape;margin:6mm}
+  html,body{width:420mm;height:297mm;margin:0;padding:0;background:#fff;overflow:hidden}
+  body{font-size:10px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #app{display:flex;flex-direction:column;height:297mm;width:420mm;overflow:hidden}
+  .header{padding:4px 10px;border-bottom:1px solid #ddd;flex-shrink:0}
+  .toolbar{padding:4px 10px;border-bottom:1px solid #ddd;flex-shrink:0}
+  .btn,.toggle-btn,.btn-login,.btn-logout,.btn-undo,.live-badge{display:none!important}
+  #roLabel{display:none!important}
+  #printBtn{display:none!important}
+  .logo{font-size:13px}
+  .month-label{font-size:14px;font-weight:700}
+  .cal-wrap{padding:3px 6px;flex:1;display:flex;flex-direction:column;overflow:hidden}
+  .cal-outer{border-radius:0;flex:1;display:flex;flex-direction:column;overflow:hidden}
+  .cal-header-row{flex-shrink:0}
+  .week-row{flex:1}
+  .day-cell{overflow:visible}
+  .day-cell.other{background:#f9f9f9!important}
+  .bar{font-size:9px!important;height:14px!important}
+  .bar-inner{font-size:9px!important}
+  .badge{font-size:7px!important}
+  .day-num{font-size:10px!important;width:18px;height:18px}
+  .day-header{font-size:10px!important;padding:3px 2px}
+  .hol-label{font-size:7px!important}
+  .add-hint{display:none!important}
+  .resize-handle{display:none!important}
+}
 #setupScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
 .setup-card{background:#fff;border-radius:16px;border:1px solid #e0dfd8;padding:32px;width:440px;max-width:100%}
 .setup-card h1{font-size:20px;font-weight:600;margin-bottom:6px}
@@ -49,6 +76,10 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
 .btn-logout:hover{background:#f5f4f0}
 .readonly-bar{cursor:default !important}
 .readonly-bar:hover{filter:none !important}
+.field-locked{background:#f8f7f3 !important;color:#888 !important;pointer-events:none;border-color:#e8e7e0 !important}
+.po.locked{opacity:0.45;pointer-events:none;cursor:default}
+.skip-row.locked{opacity:0.5;pointer-events:none;cursor:default}
+.view-only-badge{font-size:11px;color:#888;background:#f0efe8;border:1px solid #e0dfd8;border-radius:6px;padding:3px 8px;margin-left:8px}
 .pw-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:400;align-items:center;justify-content:center}
 .pw-overlay.open{display:flex}
 .pw-card{background:#fff;border-radius:14px;padding:28px 24px;width:300px;border:1px solid #e0dfd8;text-align:center}
@@ -71,34 +102,36 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
 .weekend-toggles{display:flex;gap:5px;align-items:center;border-left:1px solid #e0dfd8;padding-left:10px}
 .wknd-label{font-size:11px;color:#aaa}
 .cal-wrap{padding:12px 16px}
-.cal-outer{border:1px solid #e0dfd8;border-radius:12px;overflow:hidden}
+.cal-outer{border:1px solid #e0dfd8;border-radius:12px;overflow:visible}
 .cal-header-row{display:grid;background:#e0dfd8;gap:1px}
-.day-header{background:#fff;padding:7px 5px;font-size:11px;font-weight:600;color:#999;text-align:center;text-transform:uppercase;letter-spacing:0.05em}
+.day-header{background:#fff;padding:8px 5px;font-size:12px;font-weight:600;color:#999;text-align:center;text-transform:uppercase;letter-spacing:0.05em}
 .day-header.wknd{color:#c9b9a0}
-.week-row{display:grid;background:#e0dfd8;gap:1px;border-top:1px solid #e0dfd8}
-.day-cell{background:#fff;padding:4px 3px 2px;position:relative;overflow:hidden;transition:background 0.1s}
+.week-row{display:grid;background:#e0dfd8;gap:1px;border-top:1px solid #e0dfd8;overflow:visible;position:relative}
+.day-cell{background:#fff;padding:4px 3px 2px;position:relative;overflow:visible;transition:background 0.1s;isolation:auto}
 .day-cell:hover{background:#fafaf8}
 .day-cell.other{background:#f8f7f3}
 .day-cell.today-cell{background:#fffbe6}
 .day-cell.hol-cell{background:#fff7f0}
 .day-cell.wknd-cell{background:#fdfcfa}
 .day-cell.drag-over{background:#e8f4ff !important;outline:2px dashed #378ADD;outline-offset:-2px}
-.day-top{display:flex;align-items:flex-start;gap:3px;margin-bottom:2px;min-height:22px}
-.day-num{font-size:11px;color:#bbb;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:50%;flex-shrink:0}
+.day-top{display:flex;align-items:flex-start;gap:3px;margin-bottom:2px;height:26px;overflow:hidden;position:relative;z-index:1;flex-shrink:0}
+.day-num{font-size:12px;color:#bbb;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:50%;flex-shrink:0}
 .day-num.cur{color:#555;font-weight:500}
 .day-num.tod{background:#378ADD;color:#fff;font-weight:700}
-.hol-label{font-size:9px;color:#c0654a;font-weight:600;text-transform:uppercase;letter-spacing:0.03em;line-height:1.3;padding-top:3px}
+.hol-label{font-size:8px;color:#c0654a;font-weight:600;text-transform:uppercase;letter-spacing:0.03em;line-height:1;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bars-area{position:relative}
-.bar{position:absolute;height:18px;display:flex;align-items:center;overflow:hidden;font-size:11px;font-weight:500;cursor:grab}
+.bar{position:absolute;height:22px;display:flex;align-items:center;overflow:hidden;font-size:12px;font-weight:500;cursor:grab}
 .bar:hover{filter:brightness(0.9);z-index:5}
 .bar.dragging{opacity:0.35;cursor:grabbing}
 .bar.resizing{opacity:0.7;cursor:ew-resize;z-index:20}
 .resize-handle{position:absolute;right:0;top:0;width:7px;height:100%;cursor:ew-resize;z-index:10;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .resize-handle::after{content:'';display:block;width:2px;height:10px;background:currentColor;opacity:0.35;border-radius:2px}
 .day-cell.resize-over{background:#e8ffe8 !important;outline:2px dashed #639922;outline-offset:-2px}
-.bar-inner{display:flex;align-items:center;padding:0 5px;gap:3px;overflow:hidden;white-space:nowrap;width:100%;height:100%;pointer-events:none}
+.bar-inner{display:flex;align-items:center;padding:0 5px;gap:3px;overflow:visible;white-space:nowrap;width:100%;height:100%;pointer-events:none;position:relative;z-index:10}
 .badge{font-size:8px;font-weight:800;letter-spacing:0.04em;opacity:0.65;flex-shrink:0}
-.bar-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-name{overflow:visible;white-space:nowrap}
+.bar-label{position:absolute;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;pointer-events:none;z-index:100;font-size:12px;font-weight:500;background:transparent}
+.labels-layer{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:50}
 .skip-dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:0.35;flex-shrink:0;margin-left:1px}
 .add-hint{font-size:9px;color:#ddd;padding:2px 3px;display:none}
 .day-cell:hover .add-hint{display:block}
@@ -194,6 +227,7 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
     </div>
     <div style="display:flex;gap:6px;align-items:center">
       <span id="roLabel" style="font-size:11px;color:#aaa;display:none">View only</span>
+      <button class="btn btn-sm" id="printBtn" onclick="window.print()" title="Print A3">&#128438; Print</button>
       <button class="btn btn-sm" id="settingsBtn">&#9881; Settings</button>
       <button class="btn btn-primary btn-sm" id="addBtn" style="display:none">+ Add event</button>
       <button class="btn btn-sm btn-login" id="loginBtn">Login</button>
@@ -266,6 +300,7 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
     <button class="btn btn-danger" id="delBtn" style="margin-right:auto;display:none">Delete</button>
     <button class="btn btn-sm" id="histBtn" style="display:none;margin-right:auto;margin-left:8px">History</button>
     <button class="btn" id="cancelEvtBtn">Cancel</button>
+    <button class="btn btn-sm btn-primary" id="saveNoteBtn" style="display:none">Save note</button>
     <button class="btn btn-primary" id="saveEvtBtn">Save</button>
   </div>
 </div>
@@ -456,11 +491,13 @@ function render(){
     if(!weekDates.length){wk.setDate(wk.getDate()+7);continue;}
     const segs=layoutWeek(weekDates,getAllEvents());
     const nTracks=segs.length?Math.max(...segs.map(s=>s.track))+1:0;
-    const cellH=Math.max(110,28+nTracks*21+6);
+    const cellH=Math.max(120,30+nTracks*25+6);
 
     const row=document.createElement('div');
     row.className='week-row';
     row.style.gridTemplateColumns='repeat('+numCols+',minmax(0,1fr))';
+    row.style.position='relative';
+    const rowLabels=[]; // collect labels to append after all cells
 
     weekDates.forEach((ds,col)=>{
       const d=toDate(ds),inMonth=d.getMonth()===curMonth;
@@ -482,14 +519,14 @@ function render(){
       if(hol&&inMonth){const hl=document.createElement('div');hl.className='hol-label';hl.textContent=hol;top.appendChild(hl);}
       cell.appendChild(top);
 
-      const ba=document.createElement('div');ba.className='bars-area';ba.style.cssText='position:relative;height:'+(nTracks*21)+'px';
+      const ba=document.createElement('div');ba.className='bars-area';ba.style.cssText='position:relative;height:'+(nTracks*25)+'px';
 
       segs.forEach(seg=>{
         if(col<seg.startCol||col>seg.endCol)return;
         const isL=col===seg.startCol,isR=col===seg.endCol;
         const bar=document.createElement('div');
         bar.className='bar b-'+seg.ev.phase;
-        bar.style.top=(seg.track*21)+'px';
+        bar.style.top=(seg.track*25)+'px';
         bar.style.height='18px';
         bar.style.left=isL?(seg.isAbsStart?'2px':'-1px'):'-1px';
         bar.style.right=isR?(seg.isAbsEnd?'2px':'-1px'):'-1px';
@@ -499,10 +536,21 @@ function render(){
         if(!isEditor)bar.classList.add('readonly-bar');
 
         const inner=document.createElement('div');inner.className='bar-inner';
-        const skips=(seg.ev.skipSat||seg.ev.skipSun); if(isL){inner.innerHTML='<span class="badge">'+BADGES[seg.ev.phase]+'</span><span class="bar-name">'+esc(seg.ev.job)+'</span>'+(skips?'<span class="skip-dot" title="Skips weekends"></span>':'')+''}
         bar.appendChild(inner);
+        // Floating label sits above all bar backgrounds
+        if(isL){
+          // Show label at start of every week row the event appears in
+          rowLabels.push({col,track:seg.track,phase:seg.ev.phase,
+            job:seg.ev.job,skips:(seg.ev.skipSat||seg.ev.skipSun),cellRef:cell,baRef:ba});
+        }
         bar.title=seg.ev.job+' \u2014 '+PNAMES[seg.ev.phase]+(seg.ev.skipSat&&seg.ev.skipSun?' \u00B7 skips Sat+Sun':seg.ev.skipSat?' \u00B7 skips Sat':seg.ev.skipSun?' \u00B7 skips Sun':'')+(seg.ev.notes?'\n'+seg.ev.notes:'');
 
+        // Allow click to open view-only modal for everyone
+        if(!isEditor){
+          let mdTime=0;
+          bar.addEventListener('mousedown',()=>mdTime=Date.now());
+          bar.addEventListener('click',()=>{if(Date.now()-mdTime<250)openEdit(seg.ev);});
+        }
         if(isEditor){
           bar.addEventListener('dragstart',e=>{
             if(resizeId||e.target.closest('.resize-handle')){e.preventDefault();return;}
@@ -544,6 +592,37 @@ function render(){
       if(inMonth&&isEditor){const h=document.createElement('div');h.className='add-hint';h.textContent='+ add';cell.appendChild(h);cell.ondblclick=e=>{if(!e.target.closest('.bar'))openAdd(ds);};}
       row.appendChild(cell);
     });
+    // Render all text labels in a single overlay layer above all bar backgrounds
+    if(rowLabels.length){
+      const layer=document.createElement('div');
+      layer.className='labels-layer';
+      layer.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:50';
+      const colW=100/numCols;
+      const lblEls=[];
+      rowLabels.forEach(info=>{
+        const lbl=document.createElement('div');
+        lbl.className='bar-label';
+        // Temp top \u2014 will be corrected after layout
+        const phaseColors={cut:'#0C447C',build:'#27500A',dropoff:'#633806',install:'#72243E',service:'#444441',other:'#3C3489'};
+        const txtColor=phaseColors[info.phase]||'#333';
+        // Find how many cols until next label on same track \u2014 text can span that many
+        const sameTrkLabels=rowLabels.filter(x=>x.track===info.track&&x.col>info.col);
+        const nextLblCol=sameTrkLabels.length?Math.min(...sameTrkLabels.map(x=>x.col)):numCols;
+        const spanCols=nextLblCol-info.col;
+        const maxW='calc('+spanCols+'*('+colW+'%) + '+(spanCols-1)+'px - 8px)';
+        lbl.style.cssText='position:absolute;left:calc('+(info.col*colW)+'% + '+info.col+'px);top:0;height:22px;z-index:100;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;padding:0 5px;font-size:12px;font-weight:500;pointer-events:none;visibility:hidden;color:'+txtColor+';background:transparent;max-width:'+maxW+';overflow:hidden';
+        lbl.innerHTML='<span class="badge" style="font-size:8px;font-weight:800;letter-spacing:0.04em;opacity:0.65;flex-shrink:0">'+BADGES[info.phase]+'</span><span>'+esc(info.job)+'</span>'+(info.skips?'<span class="skip-dot" style="width:5px;height:5px;border-radius:50%;background:currentColor;opacity:0.35;flex-shrink:0;margin-left:1px"></span>':'');
+        layer.appendChild(lbl);
+        lblEls.push({lbl,info});
+      });
+      row.appendChild(layer);
+      // Fixed offset: cell padding(4) + day-top height(26) + margin-bottom(2) = 32px
+      const BAR_OFFSET=31;
+      lblEls.forEach(({lbl,info})=>{
+        lbl.style.top=(BAR_OFFSET+(info.track*25))+'px';
+        lbl.style.visibility='visible';
+      });
+    }
     outer.appendChild(row);
     wk.setDate(wk.getDate()+7);
   }
@@ -706,13 +785,42 @@ function openAdd(ds){
 }
 function openEdit(ev){
   editId=ev.id;
-  document.getElementById('evtTitle').textContent='Edit event';
   document.getElementById('fJob').value=ev.job;document.getElementById('fNotes').value=ev.notes||'';
   document.getElementById('fStart').value=ev.start;document.getElementById('fEnd').value=ev.end||ev.start;
   const _skipSat=ev.skipSat!==undefined?!!ev.skipSat:!!ev.skipWknd;
   const _skipSun=ev.skipSun!==undefined?!!ev.skipSun:!!ev.skipWknd;
   document.getElementById('fSkipSat').checked=_skipSat;document.getElementById('fSkipSun').checked=_skipSun;
-  setPhase(ev.phase);document.getElementById('delBtn').style.display='inline-block';document.getElementById('histBtn').style.display='inline-block';
+  setPhase(ev.phase);
+
+  if(isEditor){
+    document.getElementById('evtTitle').textContent='Edit event';
+    document.getElementById('evtTitle').querySelector&&document.getElementById('evtTitle').querySelector('.view-only-badge')?.remove();
+    document.getElementById('delBtn').style.display='inline-block';
+    document.getElementById('histBtn').style.display='inline-block';
+    document.getElementById('saveEvtBtn').style.display='inline-block';
+    document.getElementById('saveNoteBtn').style.display='none';
+    document.getElementById('cancelEvtBtn').textContent='Cancel';
+    // unlock all fields
+    ['fJob','fStart','fEnd'].forEach(id=>document.getElementById(id).classList.remove('field-locked'));
+    document.querySelectorAll('.po').forEach(el=>el.classList.remove('locked'));
+    document.querySelectorAll('.skip-row').forEach(el=>el.classList.remove('locked'));
+    document.getElementById('fNotes').classList.remove('field-locked');
+    document.getElementById('fNotes').readOnly=false;
+  } else {
+    document.getElementById('evtTitle').textContent=ev.job;
+    document.getElementById('delBtn').style.display='none';
+    document.getElementById('histBtn').style.display='none';
+    document.getElementById('saveEvtBtn').style.display='none';
+    document.getElementById('cancelEvtBtn').textContent='Close';
+    // lock all fields except notes
+    ['fJob','fStart','fEnd'].forEach(id=>document.getElementById(id).classList.add('field-locked'));
+    document.querySelectorAll('.po').forEach(el=>el.classList.add('locked'));
+    document.querySelectorAll('.skip-row').forEach(el=>el.classList.add('locked'));
+    document.getElementById('fNotes').classList.remove('field-locked');
+    document.getElementById('fNotes').readOnly=false;
+    // hide save, show a note-save button
+    document.getElementById('saveNoteBtn').style.display='inline-block';
+  }
   document.getElementById('evtOverlay').classList.add('open');
 }
 function closeEvt(){document.getElementById('evtOverlay').classList.remove('open');}
@@ -882,6 +990,15 @@ document.getElementById('connectBtn').onclick=()=>{
   localStorage.setItem('cab_cfg',JSON.stringify({url,key,name}));userName=name;
   document.getElementById('setupScreen').style.display='none';document.getElementById('app').style.display='block';
   initFirebase(url,key);
+};
+document.getElementById('saveNoteBtn').onclick=()=>{
+  if(!editId)return;
+  const notes=document.getElementById('fNotes').value.trim();
+  const ev=_liveEvts[editId];if(!ev)return;
+  const updated={...ev,notes};
+  const hist=buildHistorySnapshot(ev,updated,'Note by '+userName);
+  eventsRef.child(editId).update({...updated,history:hist});
+  closeEvt();
 };
 document.getElementById('saveEvtBtn').onclick=()=>{
   const job=document.getElementById('fJob').value.trim();if(!job){document.getElementById('fJob').focus();return;}
