@@ -70,6 +70,30 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
 .btn-undo{color:#555;border-color:#d0cfc8;opacity:0.4;pointer-events:none}
 .btn-undo.active{opacity:1;pointer-events:auto;color:#185FA5;border-color:#B5D4F4;background:#f0f7ff}
 .btn-undo.active:hover{background:#e0efff}
+.btn-glog{color:#1a1a1a;border-color:#d0cfc8;background:#fff;font-weight:500}
+.btn-glog:hover{background:#f0efe8}
+.btn-glog.has-new{color:#7a5a00;border-color:#e6c84a;background:#fffbe6}
+.btn-glog.has-new:hover{background:#fff8d0}
+.glog-dot{display:none;width:7px;height:7px;border-radius:50%;background:#E24B4A;margin-left:4px;flex-shrink:0;vertical-align:middle;flex-shrink:0}
+.btn-glog.has-new .glog-dot{display:inline-block}
+.glog-modal{background:#fff;border-radius:14px;padding:20px;width:520px;max-width:96vw;max-height:80vh;display:flex;flex-direction:column;border:1px solid #e0dfd8}
+.glog-modal h3{font-size:14px;font-weight:600;margin-bottom:4px}
+.glog-subtitle{font-size:12px;color:#aaa;margin-bottom:14px}
+.glog-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.glog-entry{border:1px solid #e8e7e0;border-radius:8px;padding:9px 12px;background:#fafaf8;display:flex;align-items:flex-start;gap:10px}
+.glog-entry.phase-cut{background:#E6F1FB;border-color:#B5D4F4}
+.glog-entry.phase-build{background:#EAF3DE;border-color:#C0DD97}
+.glog-entry.phase-dropoff{background:#FAEEDA;border-color:#FAC775}
+.glog-entry.phase-install{background:#FBEAF0;border-color:#F4C0D1}
+.glog-entry.phase-service{background:#F1EFE8;border-color:#D3D1C7}
+.glog-entry.phase-other{background:#EEEDFE;border-color:#CECBF6}
+.glog-dot-entry{width:7px;height:7px;border-radius:50%;background:#E24B4A;flex-shrink:0;margin-top:5px}
+.glog-dot-entry.old{background:#d0d0d0}
+.glog-body{flex:1;min-width:0}
+.glog-job{font-size:13px;font-weight:600;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.glog-detail{font-size:11px;color:#888;margin-top:2px}
+.glog-who{font-size:11px;color:#aaa;white-space:nowrap;text-align:right;flex-shrink:0}
+.glog-empty{font-size:13px;color:#aaa;text-align:center;padding:24px}
 .btn-login{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
 .btn-login:hover{background:#333}
 .btn-logout{background:#fff;color:#888;border-color:#d0cfc8}
@@ -223,6 +247,7 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
         <button class="btn" id="nextBtn">&#8594;</button>
         <button class="btn btn-sm" id="todayBtn">Today</button>
         <button class="btn btn-sm btn-undo" id="undoBtn" title="Undo last change">&#8630; Undo</button>
+        <button class="btn btn-sm btn-glog" id="glogBtn" style="display:inline-flex;align-items:center">History<span class="glog-dot" id="glogDot"></span></button>
       </div>
     </div>
     <div style="display:flex;gap:6px;align-items:center">
@@ -302,6 +327,16 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
     <button class="btn" id="cancelEvtBtn">Cancel</button>
     <button class="btn btn-sm btn-primary" id="saveNoteBtn" style="display:none">Save note</button>
     <button class="btn btn-primary" id="saveEvtBtn">Save</button>
+  </div>
+</div>
+</div>
+<div class="overlay" id="glogOverlay">
+<div class="glog-modal">
+  <h3>Change log</h3>
+  <div class="glog-subtitle">Last 20 changes across all jobs</div>
+  <div class="glog-list" id="glogList"></div>
+  <div style="margin-top:14px;padding-top:12px;border-top:1px solid #f0efe8;display:flex;justify-content:flex-end">
+    <button class="btn btn-sm" id="closeGlogBtn">Close</button>
   </div>
 </div>
 </div>
@@ -704,9 +739,51 @@ function pushUndo(id,snapshot){
 function updateUndoBtn(){
   const btn=document.getElementById('undoBtn');
   if(!btn)return;
-  if(undoStack.length>0){btn.classList.add('active');btn.title='Undo: '+undoStack[undoStack.length-1].snapshot.job;}
+  if(undoStack.length>0){btn.classList.add('active');btn.title='Undo: '+undoStack[undoStack.length-1].snapshot?.job||'last change';}
   else{btn.classList.remove('active');btn.title='Nothing to undo';}
 }
+
+// Global change log
+let globalLog=[]; // [{ts,by,action,job,phase,from,to}]
+function pushGlobalLog(entry){
+  globalLog.unshift(entry); // newest first
+  if(globalLog.length>20)globalLog=globalLog.slice(0,20);
+  updateGlogBtn();
+}
+function updateGlogBtn(){
+  const btn=document.getElementById('glogBtn');
+  if(!btn)return;
+  const now=Date.now();
+  const hasNew=globalLog.some(e=>now-e.ts<86400000);
+  btn.classList.toggle('has-new',hasNew);
+  const dot=document.getElementById('glogDot');
+  if(dot)dot.style.display=hasNew?'inline-block':'none';
+}
+function openGlog(){
+  const list=document.getElementById('glogList');
+  list.innerHTML='';
+  if(!globalLog.length){list.innerHTML='<div class="glog-empty">No changes recorded yet.</div>';document.getElementById('glogOverlay').classList.add('open');return;}
+  const now=Date.now();
+  globalLog.forEach(e=>{
+    const isNew=now-e.ts<86400000;
+    const entry=document.createElement('div');
+    entry.className='glog-entry phase-'+(e.phase||'cut');
+    const dot=document.createElement('div');dot.className='glog-dot-entry'+(isNew?'':' old');
+    const body=document.createElement('div');body.className='glog-body';
+    const d=new Date(e.ts);
+    const timeStr=d.toLocaleDateString('en-AU',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'});
+    body.innerHTML='<div class="glog-job">'+esc(e.job)+'</div>'
+      +'<div class="glog-detail">'+e.action+(e.detail?' \u2014 '+e.detail:'')+'</div>';
+    const who=document.createElement('div');who.className='glog-who';
+    who.innerHTML='<div>'+esc(e.by||'')+'</div><div>'+timeStr+'</div>';
+    entry.appendChild(dot);entry.appendChild(body);entry.appendChild(who);
+    list.appendChild(entry);
+  });
+  document.getElementById('glogOverlay').classList.add('open');
+}
+document.getElementById('closeGlogBtn').onclick=()=>document.getElementById('glogOverlay').classList.remove('open');
+document.getElementById('glogOverlay').onclick=e=>{if(e.target.id==='glogOverlay')document.getElementById('glogOverlay').classList.remove('open');};
+document.getElementById('glogBtn').onclick=openGlog;
 // \u2500\u2500 LOGIN / READ-ONLY \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 const PW_HASH='6a6d2c0e7e9c8b1f4d3a5e2b0c9f7a8d1e4b6c2f5a9d3e7b0c8f1a4d2e6b9c3f';
 let isEditor=false;
@@ -898,7 +975,7 @@ function buildHistorySnapshot(existingEv,newData,byName){
     !existingEv; // always record creation
   if(!changed)return hist;
   const key='h'+Date.now();
-  hist[key]={
+  const snap={
     ts:Date.now(),by:byName,
     job:newData.job||prev.job||'',
     phase:newData.phase||prev.phase||'cut',
@@ -907,6 +984,16 @@ function buildHistorySnapshot(existingEv,newData,byName){
     notes:newData.notes||prev.notes||'',
     skipSat:!!newData.skipSat,skipSun:!!newData.skipSun
   };
+  hist[key]=snap;
+  // Log to global change log
+  const prevJob=prev.job||'';
+  const action=!existingEv?'Created'
+    :(snap.job!==prevJob?'Renamed from '+prevJob
+    :(snap.start!==prev.start||snap.end!==prev.end)?'Dates changed '+fmtD(prev.start||snap.start)+' \u2192 '+fmtD(snap.start)
+    :(snap.phase!==(prev.phase||'cut'))?'Phase changed to '+PNAMES[snap.phase]
+    :snap.notes!==(prev.notes||'')?'Note updated'
+    :'Updated');
+  pushGlobalLog({ts:snap.ts,by:byName,job:snap.job,phase:snap.phase,action,detail:''});
   // Keep only the 10 most recent entries
   const entries=Object.entries(hist).sort((a,b)=>b[1].ts-a[1].ts);
   const trimmed={};
@@ -1023,7 +1110,9 @@ document.getElementById('saveEvtBtn').onclick=()=>{
 };
 document.getElementById('delBtn').onclick=()=>{
   if(editId&&confirm('Delete this event?')){
-    pushUndo(editId,JSON.parse(JSON.stringify(_liveEvts[editId])));
+    const ev=_liveEvts[editId];
+    pushUndo(editId,JSON.parse(JSON.stringify(ev)));
+    if(ev)pushGlobalLog({ts:Date.now(),by:userName,job:ev.job||'',phase:ev.phase||'cut',action:'Deleted',detail:''});
     eventsRef.child(editId).remove();
     closeEvt();
   }
