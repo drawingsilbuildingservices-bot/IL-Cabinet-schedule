@@ -7,32 +7,44 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f0;color:#1a1a1a;font-size:14px;user-select:none}
+.print-header{display:none;align-items:flex-end;justify-content:space-between;padding:0 4px 6px;border-bottom:2px solid #1a1a1a;margin-bottom:4px;flex-shrink:0}
+.print-company{font-size:22px;font-weight:700;color:#1a1a1a;letter-spacing:0.01em}
+.print-company span{color:#1a1a1a}
+.print-month{font-size:16px;font-weight:500;color:#555;margin-top:2px}
+.print-meta{font-size:9px;color:#888;text-align:right;line-height:1.6}
+.print-legend{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.print-leg{display:flex;align-items:center;gap:3px;font-size:9px;color:#555}
+.print-leg-dot{width:10px;height:10px;border-radius:2px}
 @media print{
-  @page{size:A3 landscape;margin:6mm}
-  html,body{width:420mm;height:297mm;margin:0;padding:0;background:#fff;overflow:hidden}
-  body{font-size:10px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  #app{display:flex;flex-direction:column;height:297mm;width:420mm;overflow:hidden}
-  .header{padding:4px 10px;border-bottom:1px solid #ddd;flex-shrink:0}
-  .toolbar{padding:4px 10px;border-bottom:1px solid #ddd;flex-shrink:0}
-  .btn,.toggle-btn,.btn-login,.btn-logout,.btn-undo,.live-badge{display:none!important}
-  #roLabel{display:none!important}
-  #printBtn{display:none!important}
-  .logo{font-size:13px}
-  .month-label{font-size:14px;font-weight:700}
-  .cal-wrap{padding:3px 6px;flex:1;display:flex;flex-direction:column;overflow:hidden}
-  .cal-outer{border-radius:0;flex:1;display:flex;flex-direction:column;overflow:hidden}
+  @page{size:A3 landscape;margin:8mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;box-sizing:border-box}
+  html{overflow:hidden}
+  body{margin:0;padding:0;background:#fff;overflow:hidden;font-size:10px;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #app{display:flex!important;flex-direction:column;
+    height:calc(297mm - 16mm);overflow:hidden;
+    page-break-inside:avoid;page-break-after:avoid;break-inside:avoid;break-after:avoid}
+  .header,.toolbar{display:none!important}
+  .print-header{display:flex!important;flex-shrink:0}
+  .cal-wrap{padding:0;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+  .cal-outer{border-radius:0;border:2px solid #555;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
   .cal-header-row{flex-shrink:0}
-  .week-row{flex:1}
-  .day-cell{overflow:visible}
-  .day-cell.other{background:#f9f9f9!important}
-  .bar{font-size:9px!important;height:14px!important}
-  .bar-inner{font-size:9px!important}
-  .badge{font-size:7px!important}
-  .day-num{font-size:10px!important;width:18px;height:18px}
-  .day-header{font-size:10px!important;padding:3px 2px}
-  .hol-label{font-size:7px!important}
-  .add-hint{display:none!important}
-  .resize-handle{display:none!important}
+  .week-row{flex:1;min-height:0;overflow:hidden}
+  .day-cell{overflow:hidden;min-height:0!important}
+  .day-cell.other{background:#f5f5f5!important}
+  .bars-area{overflow:hidden!important}
+  .labels-layer{overflow:hidden!important;clip:rect(0,9999px,9999px,0)}
+  .bar{font-size:13px!important;height:20px!important}
+  .bar-inner{font-size:13px!important}
+  .badge{font-size:10px!important}
+  .day-num{font-size:14px!important;width:22px;height:22px}
+  .day-header{font-size:13px!important;padding:5px 4px;border-bottom:2px solid #555;font-weight:700;color:#444!important}
+  .hol-label{font-size:9px!important}
+  .add-hint,.resize-handle{display:none!important}
+  .cal-header-row,.week-row{background:#555!important;gap:1px}
+  .bar-label{font-size:13px!important}
+  .mini-cal{opacity:0.32;bottom:8px;right:8px;transform:scale(1.8);transform-origin:bottom right;z-index:10}
+  .day-cell:last-child,.week-row .day-cell:last-child{overflow:visible!important}
 }
 #setupScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
 .setup-card{background:#fff;border-radius:16px;border:1px solid #e0dfd8;padding:32px;width:440px;max-width:100%}
@@ -67,8 +79,8 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
 .btn-primary{background:#378ADD;color:#fff;border-color:#378ADD}
 .btn-primary:hover{background:#185FA5;border-color:#185FA5}
 .btn-danger{color:#A32D2D;border-color:#F09595}
-.btn-undo{color:#555;border-color:#d0cfc8;opacity:0.4;pointer-events:none}
-.btn-undo.active{opacity:1;pointer-events:auto;color:#185FA5;border-color:#B5D4F4;background:#f0f7ff}
+.btn-undo{color:#aaa;border-color:#e0dfd8;background:#fff;pointer-events:none}
+.btn-undo.active{pointer-events:auto;color:#185FA5;border-color:#B5D4F4;background:#f0f7ff}
 .btn-undo.active:hover{background:#e0efff}
 .btn-glog{color:#1a1a1a;border-color:#d0cfc8;background:#fff;font-weight:500}
 .btn-glog:hover{background:#f0efe8}
@@ -128,7 +140,7 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
 .cal-wrap{padding:12px 16px}
 .cal-outer{border:1px solid #e0dfd8;border-radius:12px;overflow:visible}
 .cal-header-row{display:grid;background:#e0dfd8;gap:1px}
-.day-header{background:#fff;padding:8px 5px;font-size:12px;font-weight:600;color:#999;text-align:center;text-transform:uppercase;letter-spacing:0.05em}
+.day-header{background:#fff;padding:8px 5px;font-size:14px;font-weight:600;color:#888;text-align:center;text-transform:uppercase;letter-spacing:0.05em}
 .day-header.wknd{color:#c9b9a0}
 .week-row{display:grid;background:#e0dfd8;gap:1px;border-top:1px solid #e0dfd8;overflow:visible;position:relative}
 .day-cell{background:#fff;padding:4px 3px 2px;position:relative;overflow:visible;transition:background 0.1s;isolation:auto}
@@ -139,12 +151,12 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
 .day-cell.wknd-cell{background:#fdfcfa}
 .day-cell.drag-over{background:#e8f4ff !important;outline:2px dashed #378ADD;outline-offset:-2px}
 .day-top{display:flex;align-items:flex-start;gap:3px;margin-bottom:2px;height:26px;overflow:hidden;position:relative;z-index:1;flex-shrink:0}
-.day-num{font-size:12px;color:#bbb;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:50%;flex-shrink:0}
+.day-num{font-size:14px;color:#bbb;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;flex-shrink:0}
 .day-num.cur{color:#555;font-weight:500}
 .day-num.tod{background:#378ADD;color:#fff;font-weight:700}
 .hol-label{font-size:8px;color:#c0654a;font-weight:600;text-transform:uppercase;letter-spacing:0.03em;line-height:1;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bars-area{position:relative}
-.bar{position:absolute;height:22px;display:flex;align-items:center;overflow:hidden;font-size:12px;font-weight:500;cursor:grab}
+.bar{position:absolute;height:24px;display:flex;align-items:center;overflow:hidden;font-size:14px;font-weight:500;cursor:grab}
 .bar:hover{filter:brightness(0.9);z-index:5}
 .bar.dragging{opacity:0.35;cursor:grabbing}
 .bar.resizing{opacity:0.7;cursor:ew-resize;z-index:20}
@@ -154,7 +166,14 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
 .bar-inner{display:flex;align-items:center;padding:0 5px;gap:3px;overflow:visible;white-space:nowrap;width:100%;height:100%;pointer-events:none;position:relative;z-index:10}
 .badge{font-size:8px;font-weight:800;letter-spacing:0.04em;opacity:0.65;flex-shrink:0}
 .bar-name{overflow:visible;white-space:nowrap}
-.bar-label{position:absolute;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;pointer-events:none;z-index:100;font-size:12px;font-weight:500;background:transparent}
+.bar-label{position:absolute;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;pointer-events:none;z-index:100;font-size:14px;font-weight:500;background:transparent}
+.mini-cal{position:absolute;bottom:6px;right:6px;opacity:0.22;pointer-events:none;z-index:1;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+.mini-cal-title{font-size:9px;font-weight:700;text-align:center;color:#1a1a1a;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.06em}
+.mini-cal-grid{display:grid;grid-template-columns:repeat(7,16px);gap:1px}
+.mini-cal-cell{width:16px;height:14px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#1a1a1a;font-weight:400}
+.mini-cal-cell.mc-hdr{font-weight:700;color:#555;font-size:7px}
+.mini-cal-cell.mc-today{background:#378ADD;color:#fff;border-radius:50%}
+.mini-cal-cell.mc-other{color:#ccc}
 .labels-layer{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:50}
 .skip-dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:0.35;flex-shrink:0;margin-left:1px}
 .add-hint{font-size:9px;color:#ddd;padding:2px 3px;display:none}
@@ -252,7 +271,8 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
     </div>
     <div style="display:flex;gap:6px;align-items:center">
       <span id="roLabel" style="font-size:11px;color:#aaa;display:none">View only</span>
-      <button class="btn btn-sm" id="printBtn" onclick="window.print()" title="Print A3">&#128438; Print</button>
+      <button class="btn btn-sm" id="exportPdfBtn" title="Export to PDF">&#8659; Export PDF</button>
+      <button class="btn btn-sm" id="printA3Btn" title="Print A3">&#128438; Print A3</button>
       <button class="btn btn-sm" id="settingsBtn">&#9881; Settings</button>
       <button class="btn btn-primary btn-sm" id="addBtn" style="display:none">+ Add event</button>
       <button class="btn btn-sm btn-login" id="loginBtn">Login</button>
@@ -272,6 +292,16 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
       <span class="wknd-label">Show:</span>
       <button class="toggle-btn active" id="toggleSat">Sat</button>
       <button class="toggle-btn active" id="toggleSun">Sun</button>
+    </div>
+  </div>
+  <div class="print-header" id="printHeader">
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div class="print-company">I.L Building Services Cabinet Schedule</div>
+      <div class="print-month" id="printMonth"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+      <div class="print-legend" id="printLegend"></div>
+      <div class="print-meta" id="printMeta"></div>
     </div>
   </div>
   <div class="cal-wrap"><div class="cal-outer" id="calOuter"></div></div>
@@ -526,7 +556,7 @@ function render(){
     if(!weekDates.length){wk.setDate(wk.getDate()+7);continue;}
     const segs=layoutWeek(weekDates,getAllEvents());
     const nTracks=segs.length?Math.max(...segs.map(s=>s.track))+1:0;
-    const cellH=Math.max(120,30+nTracks*25+6);
+    const cellH=Math.max(130,32+nTracks*27+6);
 
     const row=document.createElement('div');
     row.className='week-row';
@@ -554,14 +584,14 @@ function render(){
       if(hol&&inMonth){const hl=document.createElement('div');hl.className='hol-label';hl.textContent=hol;top.appendChild(hl);}
       cell.appendChild(top);
 
-      const ba=document.createElement('div');ba.className='bars-area';ba.style.cssText='position:relative;height:'+(nTracks*25)+'px';
+      const ba=document.createElement('div');ba.className='bars-area';ba.style.cssText='position:relative;height:'+(nTracks*27)+'px';
 
       segs.forEach(seg=>{
         if(col<seg.startCol||col>seg.endCol)return;
         const isL=col===seg.startCol,isR=col===seg.endCol;
         const bar=document.createElement('div');
         bar.className='bar b-'+seg.ev.phase;
-        bar.style.top=(seg.track*25)+'px';
+        bar.style.top=(seg.track*27)+'px';
         bar.style.height='18px';
         bar.style.left=isL?(seg.isAbsStart?'2px':'-1px'):'-1px';
         bar.style.right=isR?(seg.isAbsEnd?'2px':'-1px'):'-1px';
@@ -645,7 +675,7 @@ function render(){
         const nextLblCol=sameTrkLabels.length?Math.min(...sameTrkLabels.map(x=>x.col)):numCols;
         const spanCols=nextLblCol-info.col;
         const maxW='calc('+spanCols+'*('+colW+'%) + '+(spanCols-1)+'px - 8px)';
-        lbl.style.cssText='position:absolute;left:calc('+(info.col*colW)+'% + '+info.col+'px);top:0;height:22px;z-index:100;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;padding:0 5px;font-size:12px;font-weight:500;pointer-events:none;visibility:hidden;color:'+txtColor+';background:transparent;max-width:'+maxW+';overflow:hidden';
+        lbl.style.cssText='position:absolute;left:calc('+(info.col*colW)+'% + '+info.col+'px);top:0;height:22px;z-index:100;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;padding:0 5px;font-size:14px;font-weight:500;pointer-events:none;visibility:hidden;color:'+txtColor+';background:transparent;max-width:'+maxW+';overflow:hidden';
         lbl.innerHTML='<span class="badge" style="font-size:8px;font-weight:800;letter-spacing:0.04em;opacity:0.65;flex-shrink:0">'+BADGES[info.phase]+'</span><span>'+esc(info.job)+'</span>'+(info.skips?'<span class="skip-dot" style="width:5px;height:5px;border-radius:50%;background:currentColor;opacity:0.35;flex-shrink:0;margin-left:1px"></span>':'');
         layer.appendChild(lbl);
         lblEls.push({lbl,info});
@@ -654,13 +684,68 @@ function render(){
       // Fixed offset: cell padding(4) + day-top height(26) + margin-bottom(2) = 32px
       const BAR_OFFSET=31;
       lblEls.forEach(({lbl,info})=>{
-        lbl.style.top=(BAR_OFFSET+(info.track*25))+'px';
+        lbl.style.top=(BAR_OFFSET+(info.track*27))+'px';
         lbl.style.visibility='visible';
       });
+    }
+    // After last week row, inject mini next-month calendar into bottom-right cell
+    if(wk.getTime()>lastDay.getTime()||new Date(wk.getTime()+6*86400000)>lastDay){
+      // This might be the last row - will inject after all rows are done
     }
     outer.appendChild(row);
     wk.setDate(wk.getDate()+7);
   }
+  // Inject mini next-month watermark into last cell of last row
+  injectMiniCal(outer,curYear,curMonth,numCols);
+}
+
+function injectMiniCal(outer,year,month,numCols){
+  // Get all week rows, find last row's last cell
+  const rows=outer.querySelectorAll('.week-row');
+  if(!rows.length)return;
+  const lastRow=rows[rows.length-1];
+  const cells=lastRow.querySelectorAll('.day-cell');
+  if(!cells.length)return;
+  const lastCell=cells[cells.length-1];
+
+  // Build next month mini calendar
+  const nm=month===11?0:month+1;
+  const ny=month===11?year+1:year;
+  const DAYS_SHORT=['M','T','W','T','F','S','S'];
+
+  const mini=document.createElement('div');
+  mini.className='mini-cal';
+
+  const title=document.createElement('div');
+  title.className='mini-cal-title';
+  title.textContent=MONTHS[nm]+' '+ny;
+  mini.appendChild(title);
+
+  const grid=document.createElement('div');
+  grid.className='mini-cal-grid';
+
+  // Header row
+  DAYS_SHORT.forEach(d=>{const c=document.createElement('div');c.className='mini-cal-cell mc-hdr';c.textContent=d;grid.appendChild(c);});
+
+  // Days
+  const firstDay=new Date(ny,nm,1);
+  let dow=firstDay.getDay();dow=dow===0?6:dow-1; // Mon=0
+  const dim=new Date(ny,nm+1,0).getDate();
+  const todayStr=toStr(new Date());
+
+  // Empty cells before start
+  for(let i=0;i<dow;i++){const e=document.createElement('div');e.className='mini-cal-cell mc-other';grid.appendChild(e);}
+  for(let d=1;d<=dim;d++){
+    const cell=document.createElement('div');
+    const ds=ny+'-'+String(nm+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    cell.className='mini-cal-cell'+(ds===todayStr?' mc-today':'');
+    cell.textContent=d;
+    grid.appendChild(cell);
+  }
+
+  mini.appendChild(grid);
+  lastCell.style.position='relative';
+  lastCell.appendChild(mini);
 }
 
 // drag ghost
@@ -730,6 +815,80 @@ document.getElementById('toggleSun').onclick=()=>{showSun=!showSun;updateToggles
 document.getElementById('prevBtn').onclick=()=>{curMonth--;if(curMonth<0){curMonth=11;curYear--;}render();};
 document.getElementById('nextBtn').onclick=()=>{curMonth++;if(curMonth>11){curMonth=0;curYear++;}render();};
 document.getElementById('todayBtn').onclick=()=>{const n=new Date();curYear=n.getFullYear();curMonth=n.getMonth();render();};
+
+document.getElementById('printA3Btn').onclick=()=>{
+  // Set up print header same as PDF export but don't rename title
+  document.getElementById('printMonth').textContent=MONTHS[curMonth]+' '+curYear;
+  const leg=document.getElementById('printLegend');
+  leg.innerHTML='';
+  const phaseInfo=[
+    {p:'cut',label:'Cutting',color:'#B5D4F4'},
+    {p:'build',label:'Building',color:'#C0DD97'},
+    {p:'dropoff',label:'Drop off',color:'#FAC775'},
+    {p:'install',label:'Install',color:'#F4C0D1'},
+    {p:'service',label:'Service',color:'#D3D1C7'},
+    {p:'other',label:'Other',color:'#CECBF6'},
+  ];
+  phaseInfo.forEach(ph=>{
+    if(!activeFilters.has(ph.p))return;
+    const item=document.createElement('div');item.className='print-leg';
+    item.innerHTML='<span class="print-leg-dot" style="background:'+ph.color+'"></span>'+ph.label;
+    leg.appendChild(item);
+  });
+  const now=new Date();
+  const dd=String(now.getDate()).padStart(2,'0');
+  const mm=String(now.getMonth()+1).padStart(2,'0');
+  const yy=String(now.getFullYear()).slice(2);
+  const hh=String(now.getHours()).padStart(2,'0');
+  const min=String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('printMeta').textContent='Printed '+dd+'/'+mm+'/'+yy+' at '+hh+':'+min;
+  // Show reminder then print
+  alert('Print settings: Paper=A3, Layout=Landscape, Background graphics=ON');window.print();
+};
+
+document.getElementById('exportPdfBtn').onclick=()=>{
+  // Build filename: Cabinet Schedule (DD/MM/YY - HH:MM)
+  const now=new Date();
+  const dd=String(now.getDate()).padStart(2,'0');
+  const mm=String(now.getMonth()+1).padStart(2,'0');
+  const yy=String(now.getFullYear()).slice(2);
+  const hh=String(now.getHours()).padStart(2,'0');
+  const min=String(now.getMinutes()).padStart(2,'0');
+  const filename='Cabinet Schedule ('+dd+'/'+mm+'/'+yy+' - '+hh+':'+min+')';
+  document.title=filename;
+
+  // Update print header
+  document.getElementById('printMonth').textContent=MONTHS[curMonth]+' '+curYear;
+
+  // Build legend based on active filters
+  const leg=document.getElementById('printLegend');
+  leg.innerHTML='';
+  const phaseInfo=[
+    {p:'cut',label:'Cutting',color:'#B5D4F4'},
+    {p:'build',label:'Building',color:'#C0DD97'},
+    {p:'dropoff',label:'Drop off',color:'#FAC775'},
+    {p:'install',label:'Install',color:'#F4C0D1'},
+    {p:'service',label:'Service',color:'#D3D1C7'},
+    {p:'other',label:'Other',color:'#CECBF6'},
+  ];
+  phaseInfo.forEach(ph=>{
+    if(!activeFilters.has(ph.p))return;
+    const item=document.createElement('div');item.className='print-leg';
+    item.innerHTML='<span class="print-leg-dot" style="background:'+ph.color+'"></span>'+ph.label;
+    leg.appendChild(item);
+  });
+
+  // Print meta
+  const satTxt=showSat?'Sat shown':'Sat hidden';
+  const sunTxt=showSun?'Sun shown':'Sun hidden';
+  document.getElementById('printMeta').textContent='Printed '+dd+'/'+mm+'/'+yy+' at '+hh+':'+min+' \u00B7 '+satTxt+' \u00B7 '+sunTxt;
+
+  // Trigger print (browser saves as PDF)
+  window.print();
+
+  // Restore title after
+  setTimeout(()=>{document.title='Cabinet Schedule';},2000);
+};
 
 function pushUndo(id,snapshot){
   undoStack.push({id,snapshot});
