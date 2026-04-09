@@ -377,7 +377,8 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
 <div class="pw-overlay" id="pwOverlay">
 <div class="pw-card">
   <h3>Editor login</h3>
-  <p>Enter the password to enable editing</p>
+  <p>Enter your name and password to enable editing</p>
+  <input type="text" class="pw-input" id="pwName" placeholder="Your name" maxlength="30" style="margin-bottom:8px;letter-spacing:normal"/>
   <input type="password" class="pw-input" id="pwInput" placeholder="Password" maxlength="20"/>
   <div class="pw-err" id="pwErr"></div>
   <div class="pw-actions">
@@ -1006,7 +1007,7 @@ function hashPw(s){
   let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h)+s.charCodeAt(i);
   return (h>>>0).toString(16).padStart(8,'0');
 }
-function checkPw(pw){return pw==='ILBS180';}
+function checkPw(pw){return pw==='ILBS';}
 
 function setEditorMode(on){
   isEditor=on;
@@ -1021,14 +1022,33 @@ function setEditorMode(on){
 document.getElementById('loginBtn').onclick=()=>{
   document.getElementById('pwInput').value='';
   document.getElementById('pwErr').textContent='';
+  // Pre-fill name from current userName (from settings or localStorage)
+  const savedName=JSON.parse(localStorage.getItem('cab_cfg')||'{}').name||'';
+  document.getElementById('pwName').value=savedName;
   document.getElementById('pwOverlay').classList.add('open');
-  setTimeout(()=>document.getElementById('pwInput').focus(),60);
+  setTimeout(()=>{
+    const nameEl=document.getElementById('pwName');
+    if(nameEl.value)document.getElementById('pwInput').focus();
+    else nameEl.focus();
+  },60);
 };
 document.getElementById('pwCancelBtn').onclick=()=>document.getElementById('pwOverlay').classList.remove('open');
 document.getElementById('pwOverlay').onclick=e=>{if(e.target.id==='pwOverlay')document.getElementById('pwOverlay').classList.remove('open');};
 document.getElementById('pwSubmitBtn').onclick=()=>{
   const pw=document.getElementById('pwInput').value;
+  const name=document.getElementById('pwName').value.trim();
+  if(!name){
+    document.getElementById('pwErr').textContent='Please enter your name';
+    document.getElementById('pwName').focus();
+    return;
+  }
   if(checkPw(pw)){
+    // Update userName and save to localStorage
+    userName=name;
+    const cfg=JSON.parse(localStorage.getItem('cab_cfg')||'{}');
+    cfg.name=name;
+    localStorage.setItem('cab_cfg',JSON.stringify(cfg));
+    document.getElementById('infoName').textContent=userName;
     document.getElementById('pwOverlay').classList.remove('open');
     setEditorMode(true);
   } else {
@@ -1038,6 +1058,7 @@ document.getElementById('pwSubmitBtn').onclick=()=>{
   }
 };
 document.getElementById('pwInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('pwSubmitBtn').click();});
+document.getElementById('pwName').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('pwInput').focus();});
 document.getElementById('logoutBtn').onclick=()=>{setEditorMode(false);};
 // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
@@ -1227,7 +1248,15 @@ function recalcEnd(){
 document.getElementById('fStart').addEventListener('change',recalcEnd);
 document.getElementById('fSkipSat').addEventListener('change',recalcEnd);
 document.getElementById('fSkipSun').addEventListener('change',recalcEnd);
-document.getElementById('evtOverlay').onclick=e=>{if(e.target.id==='evtOverlay')closeEvt();};
+// Only close overlay if BOTH mousedown and mouseup were on the overlay background
+let _evtOverlayMdOnBg=false;
+document.getElementById('evtOverlay').addEventListener('mousedown',e=>{
+  _evtOverlayMdOnBg=e.target.id==='evtOverlay';
+});
+document.getElementById('evtOverlay').addEventListener('mouseup',e=>{
+  if(_evtOverlayMdOnBg&&e.target.id==='evtOverlay')closeEvt();
+  _evtOverlayMdOnBg=false;
+});
 document.getElementById('settingsBtn').onclick=()=>{
   const cfg=JSON.parse(localStorage.getItem('cab_cfg')||'{}');
   document.getElementById('infoUrl').textContent=cfg.url||'\u2014';
