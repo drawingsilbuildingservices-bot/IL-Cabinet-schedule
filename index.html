@@ -905,9 +905,23 @@ function updateUndoBtn(){
 // Global change log
 let globalLog=[]; // [{ts,by,action,job,phase,from,to}]
 function pushGlobalLog(entry){
-  globalLog.unshift(entry); // newest first
-  if(globalLog.length>20)globalLog=globalLog.slice(0,20);
-  updateGlogBtn();
+  if(changelogRef){
+    // Write to Firebase \u2014 the .on('value') listener will update globalLog for all devices
+    changelogRef.push(entry);
+    // Prune to max 20 entries
+    changelogRef.orderByChild('ts').once('value',snap=>{
+      const keys=[];snap.forEach(c=>keys.push(c.key));
+      if(keys.length>20){
+        const toDelete=keys.slice(0,keys.length-20);
+        toDelete.forEach(k=>changelogRef.child(k).remove());
+      }
+    });
+  } else {
+    // TEST mode - local only
+    globalLog.unshift(entry);
+    if(globalLog.length>20)globalLog=globalLog.slice(0,20);
+    updateGlogBtn();
+  }
 }
 function updateGlogBtn(){
   const btn=document.getElementById('glogBtn');
@@ -1197,7 +1211,7 @@ document.getElementById('addBtn').style.display='none';
 document.getElementById('roLabel').style.display='inline-block';
 
 
-let db,eventsRef,_liveEvts={};
+let db,eventsRef,changelogRef,_liveEvts={};
 function getAllEvents(){return _liveEvts;}
 function saveEventNoHistory(id,data){
   if(!eventsRef)return;
@@ -1221,10 +1235,16 @@ function setBadge(s){const b=document.getElementById('liveBadge'),t=document.get
 function initFirebase(u,k){
   try{
     const app=firebase.initializeApp({apiKey:k,databaseURL:u,projectId:'cabinet-app'});
-    db=firebase.database(app);eventsRef=db.ref('events');
+    db=firebase.database(app);eventsRef=db.ref('events');changelogRef=db.ref('changelog');
     setBadge('connecting');
     db.ref('.info/connected').on('value',s=>setBadge(s.val()?'live':'offline'));
     eventsRef.on('value',snap=>{_liveEvts=snap.val()||{};render();},()=>setBadge('offline'));
+    // Subscribe to changelog - rebuild globalLog from Firebase and update button
+    changelogRef.orderByChild('ts').limitToLast(20).on('value',snap=>{
+      globalLog=[];
+      snap.forEach(child=>{globalLog.unshift(child.val());});
+      updateGlogBtn();
+    });
     eventsRef.once('value',snap=>{if(!snap.val()){const b={};SAMPLE.forEach(e=>{b[eventsRef.push().key]={...e,notes:e.notes||'',createdBy:userName,createdAt:Date.now()};});eventsRef.update(b);}});
   }catch(e){setBadge('offline');console.error(e);}
 }
