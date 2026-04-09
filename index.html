@@ -176,6 +176,9 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
 .mini-cal-cell.mc-other{color:#ccc}
 .labels-layer{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:50}
 .skip-dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:0.35;flex-shrink:0;margin-left:1px}
+.note-dot{width:7px;height:7px;border-radius:50%;background:#E24B4A;flex-shrink:0;margin-left:3px;opacity:0.85}
+.bar-tooltip{position:fixed;z-index:999;background:#1a1a1a;color:#fff;padding:7px 11px;border-radius:8px;font-size:12px;font-weight:400;max-width:280px;white-space:pre-wrap;line-height:1.5;pointer-events:none;opacity:0;transition:opacity 0.15s;box-shadow:0 4px 14px rgba(0,0,0,0.25)}
+.bar-tooltip.visible{opacity:1}
 .add-hint{font-size:9px;color:#ddd;padding:2px 3px;display:none}
 .day-cell:hover .add-hint{display:block}
 .b-cut{background:#E6F1FB;color:#0C447C}
@@ -306,7 +309,8 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
   </div>
   <div class="cal-wrap"><div class="cal-outer" id="calOuter"></div></div>
 </div>
-<div id="dragGhost" class="drag-ghost"></div>
+<div id="barTooltip" class="bar-tooltip"></div>
+  <div id="dragGhost" class="drag-ghost"></div>
 <div class="overlay" id="histOverlay">
 <div class="hist-modal">
   <h3 id="histTitle">Event history</h3>
@@ -606,9 +610,15 @@ function render(){
         if(isL){
           // Show label at start of every week row the event appears in
           rowLabels.push({col,track:seg.track,phase:seg.ev.phase,
-            job:seg.ev.job,skips:(seg.ev.skipSat||seg.ev.skipSun),cellRef:cell,baRef:ba});
+            job:seg.ev.job,skips:(seg.ev.skipSat||seg.ev.skipSun),
+            notes:(seg.ev.notes||'').trim(),ev:seg.ev,cellRef:cell,baRef:ba});
         }
-        bar.title=seg.ev.job+' \u2014 '+PNAMES[seg.ev.phase]+(seg.ev.skipSat&&seg.ev.skipSun?' \u00B7 skips Sat+Sun':seg.ev.skipSat?' \u00B7 skips Sat':seg.ev.skipSun?' \u00B7 skips Sun':'')+(seg.ev.notes?'\n'+seg.ev.notes:'');
+        bar.title='';
+        if(seg.ev.notes&&seg.ev.notes.trim()){
+          bar.addEventListener('mouseenter',e=>showBarTooltip(e,seg.ev.job,seg.ev.notes.trim()));
+          bar.addEventListener('mousemove',e=>moveBarTooltip(e));
+          bar.addEventListener('mouseleave',hideBarTooltip);
+        }
 
         // Allow click to open view-only modal for everyone
         if(!isEditor){
@@ -676,7 +686,7 @@ function render(){
         const spanCols=nextLblCol-info.col;
         const maxW='calc('+spanCols+'*('+colW+'%) + '+(spanCols-1)+'px - 8px)';
         lbl.style.cssText='position:absolute;left:calc('+(info.col*colW)+'% + '+info.col+'px);top:0;height:22px;z-index:100;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;padding:0 5px;font-size:14px;font-weight:500;pointer-events:none;visibility:hidden;color:'+txtColor+';background:transparent;max-width:'+maxW+';overflow:hidden';
-        lbl.innerHTML='<span class="badge" style="font-size:8px;font-weight:800;letter-spacing:0.04em;opacity:0.65;flex-shrink:0">'+BADGES[info.phase]+'</span><span>'+esc(info.job)+'</span>'+(info.skips?'<span class="skip-dot" style="width:5px;height:5px;border-radius:50%;background:currentColor;opacity:0.35;flex-shrink:0;margin-left:1px"></span>':'');
+        lbl.innerHTML='<span class="badge" style="font-size:8px;font-weight:800;letter-spacing:0.04em;opacity:0.65;flex-shrink:0">'+BADGES[info.phase]+'</span><span>'+esc(info.job)+'</span>'+(info.skips?'<span class="skip-dot" style="width:5px;height:5px;border-radius:50%;background:currentColor;opacity:0.35;flex-shrink:0;margin-left:1px"></span>':'')+(info.notes?'<span class="note-dot"></span>':'');
         layer.appendChild(lbl);
         lblEls.push({lbl,info});
       });
@@ -686,6 +696,18 @@ function render(){
       lblEls.forEach(({lbl,info})=>{
         lbl.style.top=(BAR_OFFSET+(info.track*27))+'px';
         lbl.style.visibility='visible';
+        // Hover tooltip showing notes
+        // Always enable pointer events so click opens event
+        lbl.style.pointerEvents='auto';
+        lbl.style.cursor='pointer';
+        let lblMd=0;
+        lbl.addEventListener('mousedown',()=>lblMd=Date.now());
+        lbl.addEventListener('click',()=>{if(Date.now()-lblMd<250)openEdit(info.ev);});
+        if(info.notes){
+          lbl.addEventListener('mouseenter',e=>showBarTooltip(e,info.job,info.notes));
+          lbl.addEventListener('mousemove',e=>moveBarTooltip(e));
+          lbl.addEventListener('mouseleave',hideBarTooltip);
+        }
       });
     }
     // After last week row, inject mini next-month calendar into bottom-right cell
@@ -955,6 +977,24 @@ function openGlog(){
   document.getElementById('glogOverlay').classList.add('open');
 }
 document.getElementById('closeGlogBtn').onclick=()=>document.getElementById('glogOverlay').classList.remove('open');
+
+// Bar hover tooltip
+function showBarTooltip(e,job,notes){
+  const tt=document.getElementById('barTooltip');
+  tt.textContent=notes;
+  tt.classList.add('visible');
+  moveBarTooltip(e);
+}
+function moveBarTooltip(e){
+  const tt=document.getElementById('barTooltip');
+  const x=e.clientX+14,y=e.clientY-10;
+  const w=tt.offsetWidth,ww=window.innerWidth;
+  tt.style.left=(x+w>ww?ww-w-8:x)+'px';
+  tt.style.top=y+'px';
+}
+function hideBarTooltip(){
+  document.getElementById('barTooltip').classList.remove('visible');
+}
 document.getElementById('glogOverlay').onclick=e=>{if(e.target.id==='glogOverlay')document.getElementById('glogOverlay').classList.remove('open');};
 document.getElementById('glogBtn').onclick=openGlog;
 // \u2500\u2500 LOGIN / READ-ONLY \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
