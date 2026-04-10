@@ -697,18 +697,31 @@ function render(){
       lblEls.forEach(({lbl,info})=>{
         lbl.style.top=(BAR_OFFSET+(info.track*27))+'px';
         lbl.style.visibility='visible';
-        // Hover tooltip showing notes
-        // Always enable pointer events so click opens event
-        lbl.style.pointerEvents='auto';
-        lbl.style.cursor='pointer';
-        let lblMd=0;
-        lbl.addEventListener('mousedown',()=>lblMd=Date.now());
-        lbl.addEventListener('click',()=>{if(Date.now()-lblMd<250)openEdit(info.ev);});
-        if(info.notes){
-          lbl.addEventListener('mouseenter',e=>showBarTooltip(e,info.job,info.notes));
-          lbl.addEventListener('mousemove',e=>moveBarTooltip(e));
-          lbl.addEventListener('mouseleave',hideBarTooltip);
-        }
+        // Label transparent to mouse \u2014 bar underneath handles all events
+        lbl.style.pointerEvents='none';
+        // After layout, create an invisible hit-area overlay matching label width
+        // so clicks and drags on overflowed text still hit something
+        requestAnimationFrame(()=>{
+          const lblW=lbl.scrollWidth;
+          const bars=[...info.baRef.querySelectorAll('.bar')];
+          const bar=bars[info.track]||bars[0];
+          if(!bar||!lblW)return;
+          // Widen the bar's pointer area using a sibling invisible div
+          const hit=document.createElement('div');
+          hit.style.cssText='position:absolute;top:'+(info.track*27)+'px;left:calc('+
+            (info.col*(100/numCols))+'% + '+info.col+'px);width:'+lblW+'px;height:24px;'+
+            'z-index:15;cursor:'+(isEditor?'grab':'pointer')+';background:transparent';
+          // Forward all mouse events to bar
+          ['mousedown','mouseup','click','dragstart','dragend'].forEach(evt=>{
+            hit.addEventListener(evt,e=>{
+              e.stopPropagation();
+              bar.dispatchEvent(new MouseEvent(evt,{bubbles:false,cancelable:true,
+                clientX:e.clientX,clientY:e.clientY}));
+            });
+          });
+          hit.draggable=isEditor;
+          layer.appendChild(hit);
+        });
       });
     }
     // After last week row, inject mini next-month calendar into bottom-right cell
@@ -927,6 +940,7 @@ function updateUndoBtn(){
 
 // Global change log
 let globalLog=[]; // [{ts,by,action,job,phase,from,to}]
+let changelogRef=null; // set by initFirebase in LIVE mode
 function pushGlobalLog(entry){
   if(changelogRef){
     // Write to Firebase \u2014 the .on('value') listener will update globalLog for all devices
@@ -1280,7 +1294,7 @@ document.getElementById('addBtn').style.display='none';
 document.getElementById('roLabel').style.display='inline-block';
 
 
-let db,eventsRef,changelogRef,_liveEvts={};
+let db,eventsRef,_liveEvts={};
 function getAllEvents(){return _liveEvts;}
 function saveEventNoHistory(id,data){
   if(!eventsRef)return;
