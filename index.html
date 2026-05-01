@@ -240,29 +240,15 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
 .hist-current{font-size:11px;color:#aaa;padding:3px 10px}
 .hist-empty{font-size:13px;color:#aaa;text-align:center;padding:24px}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-database-compat.min.js"></script>
 </head>
-<body>
-<div id="setupScreen">
-<div class="setup-card">
-  <h1>Cabinet Schedule</h1>
-  <p>Real-time sync across your whole team using Firebase (free). Set up takes about 5 minutes the first time.</p>
-  <div class="setup-step"><div class="step-num">1</div><div class="step-body"><strong>Create a free Firebase project</strong><span>Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> &rarr; Add project &rarr; name it &rarr; Create.</span></div></div>
-  <div class="setup-step"><div class="step-num">2</div><div class="step-body"><strong>Enable Realtime Database</strong><span>Build &rarr; Realtime Database &rarr; Create Database &rarr; pick region &rarr; test mode &rarr; Enable.</span></div></div>
-  <div class="setup-step"><div class="step-num">3</div><div class="step-body"><strong>Set rules to open</strong><span>Realtime Database &rarr; Rules tab &rarr; replace with <code>{"rules":{".read":true,".write":true}}</code> &rarr; Publish.</span></div></div>
-  <div class="setup-step"><div class="step-num">4</div><div class="step-body"><strong>Get URL &amp; API Key</strong><span>Database URL on the Data tab. API Key: Project Settings &rarr; Your apps &rarr; &lt;/&gt; &rarr; Register.</span></div></div>
-  <div class="note-box">Free Firebase Spark plan — 1 GB storage, 10 GB/month. No credit card needed.</div>
-  <div class="finput"><label>Database URL</label><input id="cfgUrl" placeholder="https://your-project-default-rtdb.firebaseio.com" spellcheck="false" autocomplete="off"/></div>
-  <div class="finput"><label>Web API Key</label><input id="cfgKey" placeholder="AIzaSy..." spellcheck="false" autocomplete="off"/></div>
-  <div class="finput"><label>Your name</label><input id="cfgName" placeholder="e.g. Johnny"/></div>
-  <div class="err-box" id="setupErr"></div>
-  <button class="btn btn-primary" style="width:100%;padding:10px;font-size:14px" id="connectBtn">Connect &amp; open schedule</button>
-  <p style="font-size:11px;color:#aaa;margin-top:12px;text-align:center">Each team member enters the same URL and API key once.</p>
-</div>
-</div>
+
+
 <div id="app">
   <div class="header">
     <div class="header-left">
-      <div class="logo">Cabinet <span>Schedule</span><span class="live-badge" id="liveBadge"><span class="live-dot"></span><span id="liveText">connecting</span></span></div>
+      <div class="logo">Cabinet <span>Schedule</span></div>
       <div class="nav-btns">
         <button class="btn" id="prevBtn">&#8592;</button>
         <span class="month-label" id="monthLabel"></span>
@@ -403,8 +389,7 @@ code{font-size:11px;background:#f0efe8;padding:2px 5px;border-radius:4px;font-fa
   </div>
 </div>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-database-compat.min.js"></script>
+
 <script>
 
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -438,7 +423,7 @@ const SAMPLE=[
   {job:'Co Mai \u2014 16 Romanesque',phase:'build',start:'2026-04-07',end:'2026-04-14',skipSat:true,skipSun:true},
 ];
 
-let curYear=2026,curMonth=3;
+const _today=new Date();let curYear=_today.getFullYear(),curMonth=_today.getMonth();
 let editId=null,selPhase='cut';
 let activeFilters=new Set(['cut','build','dropoff','install','service','other']);
 let showSat=true,showSun=true;
