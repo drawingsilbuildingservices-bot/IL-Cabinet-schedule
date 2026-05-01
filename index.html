@@ -438,7 +438,7 @@ const SAMPLE=[
   {job:'Co Mai \u2014 16 Romanesque',phase:'build',start:'2026-04-07',end:'2026-04-14',skipSat:true,skipSun:true},
 ];
 
-let curYear=2026,curMonth=3;
+const _today=new Date();let curYear=_today.getFullYear(),curMonth=_today.getMonth();
 let editId=null,selPhase='cut';
 let activeFilters=new Set(['cut','build','dropoff','install','service','other']);
 let showSat=true,showSun=true;
